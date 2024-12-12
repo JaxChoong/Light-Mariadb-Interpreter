@@ -20,6 +20,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 using namespace std;
 
@@ -53,27 +54,40 @@ void viewTableCSV();
 void updateData();
 void deleteData();
 void countRows();
-
+void readFile(string filename);
 
 int main() {
-    int choice;
-    while (true) {
-        displayMenu();
-        cin >> choice;
-        switch (choice) {
-            case 1: createDatabase(); break;
-            case 2: dropDatabase(); break;
-            case 3: createTable(); break;
-            case 4:  dropTable(); break;
-            case 5: insertData(); break;
-            case 6: viewTableCSV(); break;
-            case 7: updateData(); break;
-            case 8: deleteData(); break;
-            case 9: countRows(); break;
-            case 10: return 0;
-            default: cout << "Invalid choice. Please try again." << endl;
+    // int choice;
+    // while (true) {
+    //     displayMenu();
+    //     cin >> choice;
+    //     switch (choice) {
+    //         case 1: createDatabase(); break;
+    //         case 2: dropDatabase(); break;
+    //         case 3: createTable(); break;
+    //         case 4:  dropTable(); break;
+    //         case 5: insertData(); break;
+    //         case 6: viewTableCSV(); break;
+    //         case 7: updateData(); break;
+    //         case 8: deleteData(); break;
+    //         case 9: countRows(); break;
+    //         case 10: return 0;
+    //         default: cout << "Invalid choice. Please try again." << endl;
+    //     }
+    // }
+    // set current path to current file directory
+    filesystem::current_path(filesystem::path(__FILE__).parent_path());
+    fstream file("../Data/fileInput1.mdb");
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            cout << line << endl;
         }
     }
+    else {
+        cout << "File not found" << endl;
+    }
+    file.close();
     return 0;
 }
 
