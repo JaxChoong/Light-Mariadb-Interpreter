@@ -21,6 +21,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include "FileRead.h"
 
 using namespace std;
 
@@ -54,7 +55,6 @@ void viewTableCSV();
 void updateData();
 void deleteData();
 void countRows();
-void readFile(string filename);
 
 int main() {
     // int choice;
@@ -76,18 +76,7 @@ int main() {
     //     }
     // }
     // set current path to current file directory
-    filesystem::current_path(filesystem::path(__FILE__).parent_path());
-    fstream file("../Data/fileInput1.mdb");
-    if (file.is_open()) {
-        string line;
-        while (getline(file, line)) {
-            cout << line << endl;
-        }
-    }
-    else {
-        cout << "File not found" << endl;
-    }
-    file.close();
+    readFile("fileInput1.mdb");
     return 0;
 }
 
