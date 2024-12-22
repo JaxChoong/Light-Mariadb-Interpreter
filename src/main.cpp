@@ -62,15 +62,15 @@ int main() {
     //     displayMenu();
     //     cin >> choice;
     //     switch (choice) {
-    //         case 1: createDatabase(); break;
-    //         case 2: dropDatabase(); break;
-    //         case 3: createTable(); break;
-    //         case 4:  dropTable(); break;
-    //         case 5: insertData(); break;
-    //         case 6: viewTableCSV(); break;
-    //         case 7: updateData(); break;
-    //         case 8: deleteData(); break;
-    //         case 9: countRows(); break;
+    //         case 1: createDatabase(choice); break;
+    //         case 2: dropDatabase(choice); break;
+    //         case 3: createTable(choice); break;
+    //         case 4:  dropTable(choice); break;
+    //         case 5: insertData(choice); break;
+    //         case 6: viewTableCSV(choice); break;
+    //         case 7: updateData(choice); break;
+    //         case 8: deleteData(choice); break;
+    //         case 9: countRows(choice); break;
     //         case 10: return 0;
     //         default: cout << "Invalid choice. Please try again." << endl;
     //     }
@@ -95,40 +95,4 @@ void displayMenu() {
     cout << "9. Count Rows" << endl;
     cout << "10. Exit" << endl;
     cout << "--------------------------------------" << endl;
-}
-
-void createDatabase() {
-    
-}
-
-void viewDatabase() {
-
-}
-
-void createTable() {
-    
-}
-
-void viewTable() {
-
-}
-
-void insertData() {
-
-}
-
-void viewTableCSV() {
-
-}
-
-void updateData() {
-    
-}
-
-void deleteData() {
-
-}
-
-void countRows() {
-
 }
