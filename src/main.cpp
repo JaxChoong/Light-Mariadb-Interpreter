@@ -77,7 +77,7 @@ int main() {
     //     }
     // }
     // set current path to current file directory
-    readFile("fileInput1.mdb");
+    read_file("fileInput1.mdb");
     return 0;
 }
 

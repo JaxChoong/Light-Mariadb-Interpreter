@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void readFile(const std::string& filename){
+void read_file(const std::string& filename){
     filesystem::current_path(filesystem::path(__FILE__).parent_path());
     const string file_path = "../Data/" + filename;
     cout << "Reading file: " << file_path << endl;
@@ -18,7 +18,7 @@ void readFile(const std::string& filename){
         string line;
         while (getline(file, line)) {
             cout << line << endl;
-            processLine(line);
+            process_line(line);
         }
         file.close();
     } else {

@@ -8,27 +8,27 @@
 
 using namespace std;
 
-void processLine(const string& line) {
-    regex CREATE("(CREATE)(.*)");
-    regex DROP("(DROP)(.*)");
-    regex INSERT("(INSERT)(.*)");
-    regex SELECT("(SELECT)(.*)");
-    regex UPDATE("(UPDATE)(.*)");
+void process_line(const string& line) {
+    regex create_command("(CREATE)(.*)");
+    regex drop_command("(DROP)(.*)");
+    regex insert_command("(INSERT)(.*)");
+    regex select_command("(SELECT)(.*)");
+    regex update_command("(UPDATE)(.*)");
 
     smatch m;
-    if (regex_search(line, m, CREATE)) {
+    if (regex_search(line, m, create_command)) {
         cout << "Create this" << endl;
     }
-    if (regex_search(line, m, DROP)) {
+    if (regex_search(line, m, drop_command)) {
         cout << "Drop this" << endl;
     }
-    if (regex_search(line, m, INSERT)) {
+    if (regex_search(line, m, insert_command)) {
         cout << "Insert this" << endl;
     }
-    if (regex_search(line, m, SELECT)) {
+    if (regex_search(line, m, select_command)) {
         cout << "Select this" << endl;
     }
-    if (regex_search(line, m, UPDATE)) {
+    if (regex_search(line, m, update_command)) {
         cout << "Update this" << endl;
     }
 
