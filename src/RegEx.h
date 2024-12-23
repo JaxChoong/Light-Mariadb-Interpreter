@@ -14,6 +14,7 @@ void process_line(const string& line) {
     regex insert_command("(INSERT)(.*)");
     regex select_command("(SELECT)(.*)");
     regex update_command("(UPDATE)(.*)");
+    regex delete_command("(DELETE)(.*)");
 
     smatch m;
     if (regex_search(line, m, create_command)) {
@@ -30,6 +31,9 @@ void process_line(const string& line) {
     }
     if (regex_search(line, m, update_command)) {
         cout << "Update this" << endl;
+    }
+    if (regex_search(line, m, delete_command)) {
+        cout << "Delete this" << endl;
     }
 
 }
