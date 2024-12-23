@@ -9,10 +9,21 @@
 
 using namespace std;
 
-vector<variant<int, string>> My_Database;
+vector<variant<int, string>> Data;
+
+void Save_Data() {
+    Data.push_back(2);
+    Data.push_back("Jolly");
+    Data.push_back(2);
+    Data.push_back("Kim");
+    
+    for (int i = 0; Data.size(); i++) {
+        // idk man;
+    }
+}
 
 void createDatabase() {
-    
+
 }
 
 void viewDatabase() {

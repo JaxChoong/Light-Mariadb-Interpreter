@@ -22,6 +22,7 @@
 #include <string>
 #include <filesystem>
 #include "FileRead.h"
+#include "Database.h"
 
 using namespace std;
 
@@ -44,6 +45,7 @@ struct Database {
 Database db;
 
 void displayMenu();
+void Save_data();
 void createDatabase();
 void dropDatabase();
 void viewDatabase();
@@ -57,6 +59,7 @@ void deleteData();
 void countRows();
 
 int main() {
+    void Save_Data();
     // int choice;
     // while (true) {
     //     displayMenu();
