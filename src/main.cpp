@@ -22,6 +22,7 @@
 #include <string>
 #include <filesystem>
 #include "FileRead.h"
+#include "RegEx.h"
 
 using namespace std;
 

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include "RegEx.h"
 
 using namespace std;
 
@@ -16,7 +17,7 @@ void readFile(const std::string& filename){
     if (file.is_open()) {
         string line;
         while (getline(file, line)) {
-            cout << line << endl;
+            processLine(line);
         }
         file.close();
     } else {
