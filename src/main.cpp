@@ -57,6 +57,10 @@ void updateData();
 void deleteData();
 void countRows();
 
+
+vector<string> get_database_files();
+string choose_database(vector<string> database_files);
+
 int main() {
     // int choice;
     // while (true) {
@@ -77,6 +81,8 @@ int main() {
     //     }
     // }
     // set current path to current file directory
+    vector<string> database_files = get_database_files();
+    string current_database = choose_database(database_files);
     read_file("fileInput1.mdb");
     return 0;
 }
@@ -132,4 +138,34 @@ void deleteData() {
 
 void countRows() {
 
+}
+
+vector<string> get_database_files() {
+    vector<string> database_files;
+    filesystem::current_path(filesystem::path(__FILE__).parent_path());
+    for (const auto& entry : filesystem::directory_iterator("../Data")) {
+        database_files.push_back(entry.path().filename().string());
+    }
+    cout << "Databases found:" << endl;
+    int i = 0;
+    for (const auto& file : database_files) {
+        cout << "- "<< file << " ( Select with " << to_string(i) << " )"<< endl;
+        i++;
+    }
+    return database_files;
+}
+
+string choose_database( vector<string> database_files) {
+    string database;
+    while (true) {
+        cout << "Choose a database: ";
+        cin >> database;
+        if (stoi(database) < database_files.size()) {
+            cout << "Selected database: " << database_files[stoi(database)] << endl;
+            cout << "--------------------------------------" << endl;
+            return database_files[stoi(database)];
+        } else {
+            cout << "Invalid choice. Please try again." << endl;
+        }
+    }
 }
