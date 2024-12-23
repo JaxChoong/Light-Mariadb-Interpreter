@@ -22,6 +22,8 @@
 #include <string>
 #include <filesystem>
 #include "FileRead.h"
+#include <mariadb/conncpp.hpp>
+
 
 using namespace std;
 
@@ -57,28 +59,33 @@ void deleteData();
 void countRows();
 
 int main() {
-    // int choice;
-    // while (true) {
-    //     displayMenu();
-    //     cin >> choice;
-    //     switch (choice) {
-    //         case 1: createDatabase(); break;
-    //         case 2: dropDatabase(); break;
-    //         case 3: createTable(); break;
-    //         case 4:  dropTable(); break;
-    //         case 5: insertData(); break;
-    //         case 6: viewTableCSV(); break;
-    //         case 7: updateData(); break;
-    //         case 8: deleteData(); break;
-    //         case 9: countRows(); break;
-    //         case 10: return 0;
-    //         default: cout << "Invalid choice. Please try again." << endl;
-    //     }
-    // }
-    // set current path to current file directory
-    readFile("fileInput1.mdb");
+    try {
+        sql::SQLString url();
+        sql::Properties properties({
+            {"user","username:"};
+            {"password","password:"};
+            {"database","dbname:"};
+        });
+    };
+
+    sql::Driver* driver = sql::mariadb::get_driver_instance();
+    
+    std::unique_ptr<sql::Connection> connection(driver ->connect(url,porperties));
+    
+    if (connection ->isValid()) {
+        cout << "connect successsfully" <<endl;
+
+        unique_ptr<sql::Statement> stmt(connection ->createStatement());
+        stmt ->execute("CREATE TABLE IF NOT EXEISTS example (id INT PRIMARY KEY,name VARCHAR(255))");
+        cout << "table created and exists" << endl;
+    }else{
+        cerr << "connection failed" << endl;
+    }
+    }catch (sql::SQLException &e) {
+        cerr << "error: " << e.what() << endl;
+        retuen 1;
+    }
     return 0;
-}
 
 void displayMenu() {
     cout << "--------------------------------------" << endl;
@@ -95,40 +102,103 @@ void displayMenu() {
     cout << "9. Count Rows" << endl;
     cout << "10. Exit" << endl;
     cout << "--------------------------------------" << endl;
+    cin >> choice;
 }
 
-void createDatabase() {
+// void createDatabase() {
     
-}
+// }
 
-void viewDatabase() {
+// void viewDatabase() {
 
-}
+// }
 
-void createTable() {
+// void createTable() {
     
-}
+// }
 
-void viewTable() {
+// void viewTable() {
 
-}
+// }
 
-void insertData() {
+// void insertData() {
 
-}
+// }
 
-void viewTableCSV() {
+// void viewTableCSV() {
 
-}
+// }
 
-void updateData() {
+// void updateData() {
     
+// }
+
+// void deleteData() {
+
+// }
+
+// void countRows() {
+
+// } 
+
+void listTables(sql::Connection& connnection) {
+    try {
+        cout << "Listing tables..." << endl;
+        unique_prt<sql::Statement> stmt(connection.createStatement());
+        unique_ptr<sql::ResultSet> res(stmt ->executeQuery("SHOW TABLES"));
+
+        int cout = 0;
+        while (res -> next()) {
+            cout << ++count << ". " << res -> getString(1) << endl;
+        }
+
+    if (count == 0) {
+        cout << "No tables found" << endl;
+    }
+    }catch (sql::SQLException &e) {
+        cerr << "error: " << e.what() << endl;
+    }
+
+void describeTable(sql::Connection& connection, const string& table_name) {
+    try {
+        unique_prt<sql::Statement> stmt(connection.createStatement());
+        unique_prt<sql::ResultSet> res(stmt ->executeQuery("DESCRIBE " + table_name));
+
+        cout << "table " << tablename << "stucture" << endl;
+        cout << "field\ttype\tNULL\tkey\tdefault\textra" << endl;
+        while (rest->next()){
+            cout << res -> getString("Field")<< "\t";
+            cout << res -> getString("Type")<< "\t";
+            cout << res -> getString("Null")<< "\t";
+            cout << res -> getString("Key")<< "\t";
+            cout << res -> getString("Default")<< "\t";
+            cout << res -> getString("Extra")<< "\t";
+            cout << endl;
+        }
+    }catch (sql::SQLException &e) {
+        cerr << "error: " << e.what() << endl;
+    }
+
+void runCIL(sql::Connection& connection){
+    string choice;
+    while(True){
+        displayMenu();
+        
+        if (choice == 1 ){
+            listTables(connection);
+        }else if (choice == 2){
+            cout << "Enter table name:";
+            string tableName;
+            cin >> tableName;
+            describeTable(connection,tableName);
+        }else if (choice == 3){
+            break;
+            
+        }else if (choice == 4){
+                cout << "Invalid choice, Enter again" << endl;
+            }
+          }
 }
-
-void deleteData() {
-
+      
 }
-
-void countRows() {
-
 }
