@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <mariadb/conncpp.hpp>
+#include "FileRead.h"
 
 using namespace std;
 
@@ -30,7 +31,7 @@ int main() {
             std::cout << "Connected to MariaDB successfully." << std::endl;
 
             // Execute SQL from a file
-            readFile("example.sql", *connection);
+            readFile("fileInput1.mdb", *connection);
         } else {
             std::cerr << "Connection failed!" << std::endl;
         }
