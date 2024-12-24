@@ -19,7 +19,7 @@ void read_file(const std::string& filename){
         string line;
         while (getline(file, line)) {
             cout << line << endl;
-            process_line(line);
+            process_line(line, filename);
         }
         file.close();
     } else {

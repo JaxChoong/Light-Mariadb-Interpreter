@@ -60,7 +60,7 @@ void countRows();
 
 vector<string> get_database_files();
 string choose_database(vector<string> database_files);
-
+string current_database;
 
 int main() {
     // int choice;
@@ -83,7 +83,7 @@ int main() {
     // }
     // set current path to current file directory
     vector<string> database_files = get_database_files();
-    string current_database = choose_database(database_files);
+    current_database = choose_database(database_files);
     read_file(current_database);
     return 0;
 }

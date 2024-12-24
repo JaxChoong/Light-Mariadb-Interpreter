@@ -50,7 +50,7 @@ vector<string> get_create_type(const string& create_command) {
     return {};
 }
 
-void process_line(const string& line) {
+void process_line(const string& line, string current_database) {
     regex create_command(R"(CREATE\s+(.*))");
     regex drop_command("(DROP)(.*)");
     regex insert_command("(INSERT)(.*)");
@@ -86,7 +86,7 @@ void process_line(const string& line) {
         cout << "Delete this" << endl;
     }
     if (regex_search(line, m, databases_command)) {
-        cout << "Show databases" << endl;
+        cout << "> " << current_database << endl;
     }
     if (regex_search(line, m, tables_command)) {
         cout << "Show tables" << endl;
