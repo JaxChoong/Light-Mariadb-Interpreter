@@ -11,6 +11,8 @@ using namespace std;
 
 void process_table_data(const string& create_command, int table_index);
 vector<vector<variant<string, vector<variant<int, string>>>>> tables;
+void process_insert_data(const string& insert_command, int table_index);
+int table_index = -1;
 
 vector<string> get_create_type(const string& create_command) {
     regex database_command(R"(DATABASE\s+(\w+))");
@@ -25,7 +27,6 @@ vector<string> get_create_type(const string& create_command) {
     } else if (regex_search(create_command, m, table_command)) {
         cout << "Create table" << endl;
         string table_name = m[1].str();
-        int table_index = -1;
 
         // Find or add the table name in the tables vector
         for (size_t i = 0; i < tables.size(); i++) {
@@ -75,6 +76,8 @@ void process_line(const string& line, string current_database) {
     }
     if (regex_search(line, m, insert_command)) {
         cout << "Insert this" << endl;
+        cout << m[2].str() << endl;
+        process_insert_data(m[2].str(), table_index);
     }
     if (regex_search(line, m, select_command)) {
         cout << "Select this" << endl;
@@ -134,6 +137,48 @@ void process_table_data(const string& create_command, int table_index) {
         cout << "--------------------------------------" << endl;
     } else {
         cout << "No table data found" << endl;
+    }
+}
+
+void process_insert_data(const string& insert_command, int table_index) {
+    smatch m;
+
+    // Regex to capture everything inside VALUES(...)
+    regex get_insert_data(R"(VALUES\s*\((.*)\))");
+
+    if (regex_search(insert_command, m, get_insert_data)) {
+        string insert_data = m[1].str(); // Captures the values inside VALUES(...)
+
+        // Split the captured string into individual values
+        regex value_regex(R"('([^']*)'|([^,]+))");
+        auto begin = sregex_iterator(insert_data.begin(), insert_data.end(), value_regex);
+        auto end = sregex_iterator();
+
+        vector<variant<int, string>> table_data;
+
+        cout << "Parsed data:" << endl;
+        for (auto it = begin; it != end; ++it) {
+            string value = (*it)[1].matched ? (*it)[1].str() : (*it)[2].str();
+            // Check if the value is an integer or a string
+            if (!value.empty() && all_of(value.begin(), value.end(), ::isdigit)) {
+                table_data.push_back(stoi(value)); // Add as integer
+            } else {
+                table_data.push_back(value); // Add as string
+            }
+            cout << value << " "; // Print the extracted value
+        }
+        cout << endl;
+
+        // Ensure the table index is initialized
+        while (tables.size() <= table_index) {
+            tables.emplace_back(); // Add empty vectors for missing indices
+        }
+
+        // Add data to the table
+        tables[table_index].push_back(table_data);
+
+    } else {
+        cout << "No insert data found" << endl;
     }
 }
 
