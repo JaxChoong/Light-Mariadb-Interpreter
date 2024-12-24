@@ -26,7 +26,6 @@ vector<string> get_create_type(const string& create_command) {
         string database_name = m[1].str();
         return {"database_name", database_name};
     } else if (regex_search(create_command, m, table_command)) {
-        cout << "Create table" << endl;
         string table_name = m[1].str();
 
         // Find or add the table name in the tables vector
@@ -46,7 +45,6 @@ vector<string> get_create_type(const string& create_command) {
         return {"table_name", table_name};
     } else if (regex_search(create_command, m, output_file_command)) {
         string output_file_name = m[1].str() + ".txt";
-        cout << "Output file name: " << output_file_name << endl;
         return {"output_file_name", output_file_name};
     }
     return {};
@@ -65,10 +63,7 @@ void process_line(const string& line, string current_database) {
     smatch m;
     if (regex_search(line, m, create_command)) {
         vector<string> create_type_vector = get_create_type(m[1].str());
-        if (!create_type_vector.empty()) {
-            cout << "Create Type: " << create_type_vector[0]
-                 << ", Create Name: " << create_type_vector[1] << endl;
-        } else {
+        if (create_type_vector.empty()) {
             cout << "Error: Couldn't find create types." << endl;
         }
     }
@@ -76,15 +71,11 @@ void process_line(const string& line, string current_database) {
         cout << "Drop this" << endl;
     }
     if (regex_search(line, m, insert_command)) {
-        cout << "Insert this" << endl;
-        cout << m[2].str() << endl;
         process_insert_data(m[2].str(), table_index);
     }
     if (regex_search(line, m, select_command)) {
-        cout << m[2].str() << endl;
         // checks if the select command is "SELECT *" ( npos means not found)
         if (m[2].str().find(" *") != std::string::npos) {
-            cout << "Select all" << endl;
             print_table( tables[table_index] );
         } else {
             cout << "Select this" << endl;
@@ -97,11 +88,11 @@ void process_line(const string& line, string current_database) {
         cout << "Delete this" << endl;
     }
     if (regex_search(line, m, databases_command)) {
-        cout << "> " << current_database << endl;
+        cout << current_database << endl;
     }
     if (regex_search(line, m, tables_command)) {
         for (const auto& table : tables) {
-            cout << "> " << get<string>(table[0]) << endl;
+            cout << get<string>(table[0]) << endl;
         }
     }
 }
@@ -120,7 +111,6 @@ void process_table_data(const string& create_command, int table_index) {
 
         vector<variant<int, string>> table_headers;
 
-        cout << "Parsed columns:" << endl;
         for (auto it = begin; it != end; ++it) {
             table_headers.push_back((*it)[1].str()); // Add column name
         }
@@ -133,16 +123,6 @@ void process_table_data(const string& create_command, int table_index) {
         // Add headers to the table
         tables[table_index].push_back(table_headers);
 
-        // Print the headers for verification
-        const auto& headers = get<vector<variant<int, string>>>(tables[table_index][1]);
-        for (const auto& header : headers) {
-            if (holds_alternative<string>(header)) {
-                cout << get<string>(header) << " ";
-            }
-        }
-        cout << endl;
-
-        cout << "--------------------------------------" << endl;
     } else {
         cout << "No table data found" << endl;
     }
@@ -164,7 +144,6 @@ void process_insert_data(const string& insert_command, int table_index) {
 
         vector<variant<int, string>> table_data;
 
-        cout << "Parsed data:" << endl;
         for (auto it = begin; it != end; ++it) {
             string value = (*it)[1].matched ? (*it)[1].str() : (*it)[2].str();
             // Check if the value is an integer or a string
@@ -173,7 +152,6 @@ void process_insert_data(const string& insert_command, int table_index) {
             } else {
                 table_data.push_back(value); // Add as string
             }
-            cout << value << " "; // Print the extracted value
         }
         cout << endl;
 

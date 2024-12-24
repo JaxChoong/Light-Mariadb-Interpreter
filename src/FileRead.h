@@ -18,6 +18,9 @@ void read_file(const std::string& filename){
     if (file.is_open()) {
         string line;
         while (getline(file, line)) {
+            if (!line.empty()){
+                cout << "> ";
+            }
             cout << line << endl;
             process_line(line, filename);
         }
