@@ -59,7 +59,7 @@ void deleteData();
 void countRows();
 
 int main() {
-    void Save_Data();
+    Save_Data();
     // int choice;
     // while (true) {
     //     displayMenu();

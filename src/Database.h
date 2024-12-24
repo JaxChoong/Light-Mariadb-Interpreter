@@ -13,12 +13,12 @@ vector<variant<int, string>> Data;
 
 void Save_Data() {
     Data.push_back(2);
-    Data.push_back("Jolly");
-    Data.push_back(2);
+    Data.push_back("Calvin");
+    Data.push_back(74);
     Data.push_back("Kim");
     
-    for (int i = 0; Data.size(); i++) {
-        // idk man;
+    for (int i = 0; i < Data.size(); i++) {
+        visit([](auto&& arg) { cout << arg << endl; }, Data[i]);
     }
 }
 
