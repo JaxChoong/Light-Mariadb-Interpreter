@@ -41,6 +41,17 @@ string trim(const string& str) {
 string sanitizeSQL(const string& command) {
     string sanitized = command;
 
+    // Trim the command to handle leading/trailing spaces
+    sanitized = trim(sanitized);
+
+    // Check if the line starts with a table name and has columns in parentheses
+    regex tableWithColumnsRegex(R"(^([a-zA-Z_][a-zA-Z0-9_]*)\s*\(.*?\))");
+    smatch match;
+    if (regex_search(sanitized, match, tableWithColumnsRegex)) {
+        string tableNameWithColumns = match[0];
+        sanitized = "INSERT INTO " + tableNameWithColumns + sanitized.substr(match[0].length());
+    }
+
     // Remove any unnecessary whitespace inside parentheses (e.g., in CREATE TABLE, INSERT INTO)
     sanitized = regex_replace(sanitized, regex(R"(\s*\(\s*)"), "(");
     sanitized = regex_replace(sanitized, regex(R"(\s*\)\s*)"), ")");
@@ -50,18 +61,9 @@ string sanitizeSQL(const string& command) {
         sanitized += ";";
     }
 
-    // Ensure "INSERT INTO" is added if missing for valid commands
-    if (sanitized.find("INSERT INTO") == string::npos && sanitized.find("VALUES") != string::npos) {
-        size_t tableStart = sanitized.find("(");
-        if (tableStart != string::npos) {
-            string tableName = sanitized.substr(0, tableStart);
-            tableName = trim(tableName); // Remove extra spaces
-            sanitized = "INSERT INTO " + tableName + " " + sanitized.substr(tableStart);
-        }
-    }
-
     return sanitized;
 }
+
 
 
 void runCLI() {
