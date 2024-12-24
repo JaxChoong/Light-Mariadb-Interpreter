@@ -5,12 +5,12 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <variant>
 
 using namespace std;
 
-regex table_column(R"((\w+)\s+(\w+))");
-
-void process_table_data(const string& create_command);
+void process_table_data(const string& create_command, int table_index);
+vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 
 vector<string> get_create_type(const string& create_command) {
     regex database_command(R"(DATABASE\s+(\w+))");
@@ -25,7 +25,22 @@ vector<string> get_create_type(const string& create_command) {
     } else if (regex_search(create_command, m, table_command)) {
         cout << "Create table" << endl;
         string table_name = m[1].str();
-        process_table_data(create_command);
+        int table_index = -1;
+
+        // Find or add the table name in the tables vector
+        for (size_t i = 0; i < tables.size(); i++) {
+            if (get<string>(tables[i][0]) == table_name) {
+                table_index = i;
+                break;
+            }
+        }
+
+        if (table_index == -1) {
+            tables.push_back({table_name}); // Add the table name as the first entry
+            table_index = tables.size() - 1;
+        }
+
+        process_table_data(create_command, table_index);
         return {"table_name", table_name};
     } else if (regex_search(create_command, m, output_file_command)) {
         string output_file_name = m[1].str() + ".txt";
@@ -78,7 +93,7 @@ void process_line(const string& line) {
     }
 }
 
-void process_table_data(const string& create_command) {
+void process_table_data(const string& create_command, int table_index) {
     smatch m;
     regex get_table_data(R"(\((.*)$)"); // Matches everything after '('
 
@@ -90,10 +105,30 @@ void process_table_data(const string& create_command) {
         auto begin = sregex_iterator(table_data.begin(), table_data.end(), column_regex);
         auto end = sregex_iterator();
 
+        vector<variant<int, string>> table_headers;
+
         cout << "Parsed columns:" << endl;
         for (auto it = begin; it != end; ++it) {
-            cout << "Column Name: " << (*it)[1].str() << ", Type: " << (*it)[2].str() << endl;
+            table_headers.push_back((*it)[1].str()); // Add column name
         }
+
+        // Ensure the table index is initialized
+        while (tables.size() <= table_index) {
+            tables.emplace_back(); // Add empty vectors for missing indices
+        }
+
+        // Add headers to the table
+        tables[table_index].push_back(table_headers);
+
+        // Print the headers for verification
+        const auto& headers = get<vector<variant<int, string>>>(tables[table_index][1]);
+        for (const auto& header : headers) {
+            if (holds_alternative<string>(header)) {
+                cout << get<string>(header) << " ";
+            }
+        }
+        cout << endl;
+
         cout << "--------------------------------------" << endl;
     } else {
         cout << "No table data found" << endl;
