@@ -22,10 +22,12 @@ vector<string> get_create_type(const string& create_command) {
 
     smatch m;
     if (regex_search(create_command, m, database_command)) {
+        // detects if the command is to create a database
         cout << "Create database" << endl;
         string database_name = m[1].str();
         return {"database_name", database_name};
-    } else if (regex_search(create_command, m, table_command)) {
+    } 
+    else if (regex_search(create_command, m, table_command)) {
         string table_name = m[1].str();
 
         // Find or add the table name in the tables vector
@@ -36,15 +38,17 @@ vector<string> get_create_type(const string& create_command) {
             }
         }
 
-        if (table_index == -1) {
+        if (table_index == -1) { // if table name is not found
             tables.push_back({table_name}); // Add the table name as the first entry
             table_index = tables.size() - 1;
         }
 
-        process_table_data(create_command, table_index);
+        process_table_data(create_command, table_index); 
         return {"table_name", table_name};
-    } else if (regex_search(create_command, m, output_file_command)) {
-        string output_file_name = m[1].str() + ".txt";
+    } 
+    else if (regex_search(create_command, m, output_file_command)) {
+        // detects if the command is to create an output file
+        string output_file_name = m[1].str() + ".txt";    // for now no actual output file creation, just for demonstration
         return {"output_file_name", output_file_name};
     }
     return {};
@@ -62,6 +66,7 @@ void process_line(const string& line, string current_database) {
 
     smatch m;
     if (regex_search(line, m, create_command)) {
+        // try and get what type of thing is being created (db/table/output file)
         vector<string> create_type_vector = get_create_type(m[1].str());
         if (create_type_vector.empty()) {
             cout << "Error: Couldn't find create types." << endl;
@@ -105,7 +110,7 @@ void process_table_data(const string& create_command, int table_index) {
         string table_data = m[1].str();
 
         // Extract individual columns
-        regex column_regex(R"((\w+)\s+(\w+))");
+        regex column_regex(R"((\w+)\s+(\w+))");  // seperates the column name and the column type by a space
         auto begin = sregex_iterator(table_data.begin(), table_data.end(), column_regex);
         auto end = sregex_iterator();
 
