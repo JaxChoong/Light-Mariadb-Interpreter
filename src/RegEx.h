@@ -15,6 +15,8 @@ void process_line(const string& line) {
     regex select_command("(SELECT)(.*)");
     regex update_command("(UPDATE)(.*)");
     regex delete_command("(DELETE)(.*)");
+    regex databases_command("(DATABASES;)");
+    regex tables_command("(TABLES;)");
 
     smatch m;
     if (regex_search(line, m, create_command)) {
@@ -34,6 +36,12 @@ void process_line(const string& line) {
     }
     if (regex_search(line, m, delete_command)) {
         cout << "Delete this" << endl;
+    }
+    if (regex_search(line, m, databases_command)) {
+        cout << "Show databases" << endl;
+    }
+    if (regex_search(line, m, tables_command)) {
+        cout << "Show tables" << endl;
     }
 
 }

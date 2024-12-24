@@ -161,8 +161,7 @@ string choose_database( vector<string> database_files) {
         cout << "Choose a database: ";
         cin >> database;
         if (stoi(database) < database_files.size()) {
-            cout << "Selected database: " << database_files[stoi(database)] << endl;
-            cout << "--------------------------------------" << endl;
+            cout << "Selected database: " << database_files[stoi(database)] << endl <<endl;
             return database_files[stoi(database)];
         } else {
             cout << "Invalid choice. Please try again." << endl;
