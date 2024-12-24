@@ -10,7 +10,7 @@ using namespace std;
 
 vector<string> get_create_type(const string& create_command) {
     regex database_command("(DATABASE)(.*)");
-    regex table_command("(TABLE)(.*)");
+    regex table_command(R"(TABLE\s+(\w+)\s*\()");
     regex output_file_command("(.*).txt");
 
     smatch m;
@@ -21,7 +21,8 @@ vector<string> get_create_type(const string& create_command) {
     }
     else if (regex_search(create_command, m, table_command)) {
         cout << "Create table" << endl;
-        string table_name = "";
+        string table_name = m[1].str();
+        cout << table_name << endl;
         return {"table_name" , table_name};
     }
     else if (regex_search(create_command, m, output_file_command)) {
@@ -45,8 +46,16 @@ void process_line(const string& line) {
     smatch m;
     if (regex_search(line, m, create_command)) {
         vector<string> create_type_vector = get_create_type(m[2]);
-        string create_type = create_type_vector[0];
-        string create_name = create_type_vector[1];
+        string create_type;
+        string create_name;
+        if (create_type_vector.size() != 0){
+            create_type = create_type_vector[0];
+            create_name = create_type_vector[1]; 
+        }
+        else{
+            create_type = "Error";
+            create_name = "Couldnt find create types";
+        }
         cout << create_type << create_name << endl;
 
 

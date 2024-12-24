@@ -1,7 +1,7 @@
 CREATE fileOutput1.txt; 
 DATABASES;
 
-CREATE TABLE customer( customer_id INT, customer_name TEXT, customer_city TEXT, customer_state TEXT, customer_country TEXT, customer_phone TEXT, customer_email TEXT
+CREATE TABLE urmum( customer_id INT, customer_name TEXT, customer_city TEXT, customer_state TEXT, customer_country TEXT, customer_phone TEXT, customer_email TEXT
 ); 
 TABLES;
 
