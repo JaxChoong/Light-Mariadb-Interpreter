@@ -13,6 +13,7 @@ void process_table_data(const string& create_command, int table_index);
 vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_insert_data(const string& insert_command, int table_index);
 int table_index = -1;
+void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
 
 vector<string> get_create_type(const string& create_command) {
     regex database_command(R"(DATABASE\s+(\w+))");
@@ -84,6 +85,7 @@ void process_line(const string& line, string current_database) {
         // checks if the select command is "SELECT *" ( npos means not found)
         if (m[2].str().find(" *") != std::string::npos) {
             cout << "Select all" << endl;
+            print_table( tables[table_index] );
         } else {
             cout << "Select this" << endl;
         }
@@ -185,6 +187,26 @@ void process_insert_data(const string& insert_command, int table_index) {
 
     } else {
         cout << "No insert data found" << endl;
+    }
+}
+
+void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
+    for (size_t i = 1; i < table.size(); i++) {
+        // Get the row as a vector of integers or strings
+        const auto& row = get<vector<variant<int, string>>>(table[i]);
+
+        // Print each cell in the row
+        for (const auto& cell : row) {
+            if (holds_alternative<string>(cell)) { // if cell is a string, then get it as string
+                cout << get<string>(cell);
+            } else {
+                cout << get<int>(cell);   // if cell is an integer, then get it as integer
+            }
+            if (&cell != &row.back()) {   // compare the address of the cell with the address of the last cell in the row
+                cout << ", "; // Print separator if cell is not the last one
+            }
+        }
+        cout << endl;
     }
 }
 
