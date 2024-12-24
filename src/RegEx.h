@@ -89,7 +89,9 @@ void process_line(const string& line, string current_database) {
         cout << "> " << current_database << endl;
     }
     if (regex_search(line, m, tables_command)) {
-        cout << "Show tables" << endl;
+        for (const auto& table : tables) {
+            cout << "> " << get<string>(table[0]) << endl;
+        }
     }
 }
 
