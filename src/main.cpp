@@ -28,6 +28,7 @@ void createTable(const string& tableName, const string& tableSchema);
 void insertIntoTable(const string& tableName, const vector<string>& values);
 void selectFromTable(const string& tableName);
 string trim(const string& str);  // Helper function to trim spaces
+string sanitizeSQL(const string& command);  // Function to sanitize the SQL command
 
 // Function to trim leading and trailing spaces
 string trim(const string& str) {
@@ -36,116 +37,107 @@ string trim(const string& str) {
     return (first == string::npos) ? "" : str.substr(first, last - first + 1);
 }
 
-// Function to run the Command Line Interface
+// Function to sanitize SQL commands by fixing common issues
+string sanitizeSQL(const string& command) {
+    string sanitized = command;
+
+    // Remove any unnecessary whitespace inside parentheses (e.g., in CREATE TABLE, INSERT INTO)
+    sanitized = regex_replace(sanitized, regex(R"(\s*\(\s*)"), "(");
+    sanitized = regex_replace(sanitized, regex(R"(\s*\)\s*)"), ")");
+
+    // Ensure commands end with a semicolon
+    if (sanitized.back() != ';') {
+        sanitized += ";";
+    }
+
+    // Ensure "INSERT INTO" is added if missing for valid commands
+    if (sanitized.find("INSERT INTO") == string::npos && sanitized.find("VALUES") != string::npos) {
+        size_t tableStart = sanitized.find("(");
+        if (tableStart != string::npos) {
+            string tableName = sanitized.substr(0, tableStart);
+            tableName = trim(tableName); // Remove extra spaces
+            sanitized = "INSERT INTO " + tableName + " " + sanitized.substr(tableStart);
+        }
+    }
+
+    return sanitized;
+}
+
+
 void runCLI() {
-    // Define the file name with the correct path relative to the "Data" directory
-    string fileName = "fileInput1.mdb";  // Specify the file to read from
-    
-    // Read the file using the readFile function (prints contents)
-    readFile(fileName);  // Make sure this function is correctly implemented to print the file
-
-    // Now open the file for processing and parsing commands
-    fstream file("../Data/" + fileName);  // Open the file for processing
-    string line;
-
-    // Open the output file for writing the results
-    outputFile.open("../Data/fileOutput1.txt");  // Specify the output file
+    string fileName = "fileInput1.mdb";  // Input file
+    fstream file("../Data/" + fileName);  // Open input file
+    string line, currentCommand = "";
+    outputFile.open("../Data/fileOutput1.txt");  // Open output file
 
     if (file.is_open() && outputFile.is_open()) {
-        string currentCommand = "";
-
-        // Read each line from the file and process it
         while (getline(file, line)) {
             line = trim(line);  // Trim spaces
+            if (line.empty()) continue;
 
-            if (line.empty()) continue;  // Skip empty lines
+            currentCommand += " " + line;  // Concatenate lines
 
-            currentCommand += " " + line;  // Concatenate lines for multi-line commands
-
-            // Check if the command ends with a semicolon, indicating it's complete
-            if (currentCommand.find(";") != string::npos) {
-                outputFile << "Processing line: " << currentCommand << endl;
-                // Parse the command from the line
-                parseCommand(currentCommand);  // Parse the complete command
-                currentCommand.clear();  // Clear for the next command
+            // Check if a complete command is formed (ends with a semicolon)
+            if (currentCommand.find(';') != string::npos) {
+                // Sanitize and fix the command before parsing it
+                currentCommand = sanitizeSQL(currentCommand);
+                outputFile << "Processing sanitized line: " << currentCommand << endl;
+                parseCommand(currentCommand);  // Process command
+                currentCommand.clear();  // Clear the command buffer
             }
         }
         file.close();
-        outputFile.close();  // Close the output file after processing
+        outputFile.close();
     } else {
-        cout << "Failed to open the file: " << fileName << endl;
+        cout << "Error: Unable to open files." << endl;
     }
 }
 
-// Function to parse and simulate the execution of CREATE DATABASE, CREATE TABLE, INSERT INTO, and SELECT commands
+// Function to parse and execute commands
 void parseCommand(const string& command) {
     smatch match;
 
-    // Regular expression to match CREATE DATABASE command
-    regex databaseRegex(R"(CREATE\s+DATABASE\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*;)");
+    // Regex patterns for various commands
+    regex databaseRegex(R"(CREATE\s+DATABASE\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*;)");  // Matches CREATE DATABASE command
+    regex tableRegex(R"(CREATE\s+TABLE\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\((.*?)\)\s*;)");  // Matches CREATE TABLE command
+    regex createFileRegex(R"(CREATE\s+([a-zA-Z0-9_]+\.txt)\s*;\s*DATABASES\s*;?)");  // Matches CREATE file command
+    regex insertRegex(R"(INSERT\s+INTO\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\((.*?)\)\s*VALUES\s*\((.*?)\)\s*;)");  // Matches INSERT INTO command
+    regex selectRegex(R"(SELECT\s+\*\s+FROM\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*;)");  // Matches SELECT command
 
-    // Regular expression to match CREATE TABLE command (allow for spaces/newlines between parameters)
-    regex tableRegex(R"(CREATE\s+TABLE\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\((.*?)\)\s*;)");
-
-    // Regex to match the CREATE fileOutput1.txt; DATABASES; pattern with flexible spaces and optional semicolons
-    regex createFileRegex(R"(CREATE\s+([a-zA-Z0-9_]+\.txt)\s*;\s*DATABASES\s*;?)");
-
-    // Regular expression for INSERT INTO command (allow for spaces/newlines between parameters)
-    regex insertRegex(R"(INSERT\s+INTO\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\((.*?)\)\s*VALUES\s*\((.*?)\)\s*;)");
-
-    // Regular expression for SELECT * FROM command
-    regex selectRegex(R"(SELECT\s+\*\s+FROM\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*;)");
-
-    // Check if the command is a CREATE DATABASE command
+    // Command matching using regex
     if (regex_search(command, match, databaseRegex)) {
-        string dbName = match[1];  // Extract the database name
-        createDatabase(dbName);  // Simulate creating the database
-    } 
-    // Check if the command is a CREATE TABLE command
-    else if (regex_search(command, match, tableRegex)) {
-        string tableName = match[1];  // Extract the table name
-        string tableSchema = match[2];  // Extract the table schema (column names and types)
-        createTable(tableName, tableSchema);  // Simulate creating the table
-    } 
-    // Check if the command matches the CREATE fileOutput1.txt; DATABASES; pattern
-    else if (regex_search(command, match, createFileRegex)) {
-        string fileName = match[1];  // Extract the file name (e.g., fileOutput1.txt)
+        string dbName = match[1];
+        createDatabase(dbName);
+    } else if (regex_search(command, match, tableRegex)) {
+        string tableName = match[1];
+        string tableSchema = match[2];
+        createTable(tableName, tableSchema);
+    } else if (regex_search(command, match, createFileRegex)) {
+        string fileName = match[1];
         outputFile << "Simulated: Creating file '" << fileName << "' based on the command." << endl;
-
-        // Create the file
         createFile(fileName);
-
         outputFile << "Simulated: DATABASES command executed." << endl;
-    } 
-    // Check if the command matches the INSERT INTO command
-    else if (regex_search(command, match, insertRegex)) {
-        string tableName = match[1];  // Extract the table name
-        string valuesStr = match[3];  // Extract the values
+    } else if (regex_search(command, match, insertRegex)) {
+        string tableName = match[1];
+        string valuesStr = match[3];
         stringstream ss(valuesStr);
         string value;
         vector<string> values;
-
-        // Parse the comma-separated values
         while (getline(ss, value, ',')) {
-            values.push_back(trim(value));  // Ensure values are trimmed of extra spaces
+            values.push_back(trim(value));
         }
-        insertIntoTable(tableName, values);  // Simulate inserting data into the table
-    }
-    // Check if the command matches the SELECT * FROM command
-    else if (regex_search(command, match, selectRegex)) {
-        string tableName = match[1];  // Extract the table name
-        selectFromTable(tableName);  // Simulate selecting data from the table
-    }
-    // If the command doesn't match the patterns
-    else {
-        outputFile << "Unknown command." << endl;
+        insertIntoTable(tableName, values);
+    } else if (regex_search(command, match, selectRegex)) {
+        string tableName = match[1];
+        selectFromTable(tableName);
+    } else {
+        outputFile << "Unknown command: " << command << endl;
     }
 }
 
 // Function to simulate creating a database
 void createDatabase(const string& dbName) {
     outputFile << "Simulated: Creating Database '" << dbName << "'" << endl;
-    // Store the database name in the global variable and the databases vector
     currentDatabase = dbName;
     databases.push_back(dbName);
     outputFile << "Current Databases: ";
@@ -158,9 +150,8 @@ void createDatabase(const string& dbName) {
 // Function to simulate creating a table
 void createTable(const string& tableName, const string& tableSchema) {
     outputFile << "Simulated: Creating Table '" << tableName << "' with schema: " << tableSchema << endl;
-    // Store the table name in the tableNames vector and initialize it in the databaseTables map
     tableNames.push_back(tableName);
-    databaseTables[tableName] = vector<vector<string>>();  // Initialize an empty table (vector of rows)
+    databaseTables[tableName] = vector<vector<string>>();  // Initialize table with no rows
     outputFile << "Tables in the current database '" << currentDatabase << "': ";
     for (const auto& table : tableNames) {
         outputFile << table << " ";
@@ -170,25 +161,21 @@ void createTable(const string& tableName, const string& tableSchema) {
 
 // Function to simulate inserting data into a table
 void insertIntoTable(const string& tableName, const vector<string>& values) {
-    outputFile << "Simulated: Inserting data into table '" << tableName << "' with values: ";
-    for (const auto& value : values) {
-        outputFile << value << " ";
-    }
-    outputFile << endl;
-
-    // Insert the values into the corresponding table
     if (databaseTables.find(tableName) != databaseTables.end()) {
         databaseTables[tableName].push_back(values);
+        outputFile << "Inserted into table '" << tableName << "': ";
+        for (const auto& value : values) {
+            outputFile << value << " ";
+        }
+        outputFile << endl;
     } else {
-        outputFile << "Error: Table '" << tableName << "' does not exist." << endl;
+        outputFile << "Error: Table '" << tableName << "' not found." << endl;
     }
 }
 
 // Function to simulate SELECT * FROM a table
 void selectFromTable(const string& tableName) {
     outputFile << "Simulated: SELECT * FROM table '" << tableName << "'" << endl;
-
-    // Retrieve and display the rows of the table
     if (databaseTables.find(tableName) != databaseTables.end()) {
         outputFile << "Table: " << tableName << endl;
         for (const auto& row : databaseTables[tableName]) {
@@ -202,9 +189,9 @@ void selectFromTable(const string& tableName) {
     }
 }
 
-// Function to create a file based on the command (simulated)
+// Function to create a file
 void createFile(const string& filename) {
-    ofstream outFile(filename);  // Create the file
+    ofstream outFile(filename);
     if (outFile.is_open()) {
         outFile << "This file was created as part of the simulated CREATE command." << endl;
         outFile.close();
@@ -215,6 +202,6 @@ void createFile(const string& filename) {
 }
 
 int main() {
-    runCLI();  // Start running the CLI simulation
+    runCLI();
     return 0;
 }
