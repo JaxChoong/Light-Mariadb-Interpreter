@@ -80,7 +80,13 @@ void process_line(const string& line, string current_database) {
         process_insert_data(m[2].str(), table_index);
     }
     if (regex_search(line, m, select_command)) {
-        cout << "Select this" << endl;
+        cout << m[2].str() << endl;
+        // checks if the select command is "SELECT *" ( npos means not found)
+        if (m[2].str().find(" *") != std::string::npos) {
+            cout << "Select all" << endl;
+        } else {
+            cout << "Select this" << endl;
+        }
     }
     if (regex_search(line, m, update_command)) {
         cout << "Update this" << endl;
