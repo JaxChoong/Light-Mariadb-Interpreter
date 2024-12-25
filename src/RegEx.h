@@ -12,6 +12,7 @@ using namespace std;
 void process_table_data(const string& create_command, int table_index);
 vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_insert_data(const string& insert_command, int table_index);
+void process_delete_data(const string& Delete, int table_index);
 int table_index = -1;
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
 
@@ -170,6 +171,62 @@ void process_insert_data(const string& insert_command, int table_index) {
 
     } else {
         cout << "No insert data found" << endl;
+    }
+}
+
+void process_delete_data (const string& Delete, int table_index) {
+    smatch m;
+    regex get_delete_data(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
+
+    if (regex_search(Delete, m, get_delete_data)) {
+        string table_name = m[1].str();
+        string condition = m[2].str();
+        string value = m[3].str();
+
+        if (table_index == -1) {
+            cout << "No table selected" << endl;
+            return;
+        }
+
+        auto& table = tables[table_index];
+        auto& headers = get<vector<variant<int, string>>>(table[0]);
+
+        // Find the index of the column to delete from
+        int column_index = -1;
+
+        for (size_t i = 0; i < headers.size(); i++) {
+            if (holds_alternative<string>(headers[i]) && get<string>(headers[i]) == condition) {
+                column_index = i;
+                break;
+            }
+        }
+        //error capturing
+        if (column_index == -1) {
+            cout << "Column not found" << endl;
+            return;
+        }
+
+        // Find the index of the row to delete
+        int row_index = -1;
+
+        for (size_t i = 1; i < table.size(); i++) {
+            const auto& row = get<vector<variant<int, string>>>(table[i]);
+            if (holds_alternative<string>(row[column_index]) && get<string>(row[column_index]) == value) {
+                row_index = i;
+                break;
+            }
+        }
+        //error capturing
+        if (row_index == -1) {
+            cout << "Row not found" << endl;
+            return;
+        }
+
+        // Delete the row
+        table.erase(table.begin() + row_index); 
+
+    } else {
+        cout << "No delete data found" << endl;
     }
 }
 
