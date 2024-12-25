@@ -91,7 +91,8 @@ void process_line(const string& line, string current_database) {
         cout << "Update this" << endl;
     }
     if (regex_search(line, m, delete_command)) {
-        cout << "Delete this" << endl;
+        cout << line << endl;
+        process_delete_data(line, table_index);
     }
     if (regex_search(line, m, databases_command)) {
         cout << current_database << endl;
@@ -177,19 +178,23 @@ void process_insert_data(const string& insert_command, int table_index) {
 void process_delete_data (const string& Delete, int table_index) {
     smatch m;
     regex get_delete_data(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
+    cout << Delete << endl;
 
     if (regex_search(Delete, m, get_delete_data)) {
         string table_name = m[1].str();
         string condition = m[2].str();
+        cout << table_name << endl;
+        cout << condition << endl;
         string value = m[3].str();
-
+        cout << value << endl;
+        
         if (table_index == -1) {
             cout << "No table selected" << endl;
             return;
         }
 
         auto& table = tables[table_index];
-        auto& headers = get<vector<variant<int, string>>>(table[0]);
+        auto& headers = get<vector<variant<int, string>>>(table[1]);
 
         // Find the index of the column to delete from
         int column_index = -1;

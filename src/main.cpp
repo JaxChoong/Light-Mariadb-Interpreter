@@ -64,7 +64,6 @@ string choose_database(vector<string> database_files);
 string current_database;
 
 int main() {
-    process_delete_data("DELETE FROM john's WHERE customer_id=4", table_index);
     // int choice;
     // while (true) {
     //     displayMenu();
