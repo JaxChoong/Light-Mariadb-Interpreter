@@ -59,7 +59,7 @@ void deleteData();
 void countRows();
 
 int main() {
-    Save_Data();
+    process_delete_data("DELETE FROM john's WHERE customer_id=4", table_index);
     // int choice;
     // while (true) {
     //     displayMenu();
