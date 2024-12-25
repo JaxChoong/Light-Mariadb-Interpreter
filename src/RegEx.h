@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <variant>
+#include "FileManip.h"
 
 using namespace std;
 
@@ -15,6 +16,7 @@ void process_insert_data(const string& insert_command, int table_index);
 void process_delete_data(const string& Delete, int table_index);
 int table_index = -1;
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
+void write_to_file(const vector<string>& lines, const std::string& output_filename); // Function prototype
 
 vector<string> get_create_type(const string& create_command) {
     regex database_command(R"(DATABASE\s+(\w+))");
@@ -200,59 +202,63 @@ void process_delete_data (const string& Delete, int table_index) {
         int column_index = -1;
 
         for (size_t i = 0; i < headers.size(); i++) {
-            if (holds_alternative<string>(headers[i]) && get<string>(headers[i]) == condition) {
+            if (get<string>(headers[i]) == condition) {
                 column_index = i;
                 break;
             }
         }
-        //error capturing
+
         if (column_index == -1) {
             cout << "Column not found" << endl;
             return;
         }
 
-        // Find the index of the row to delete
-        int row_index = -1;
-
-        for (size_t i = 1; i < table.size(); i++) {
+        size_t initial_size = table.size();
+        for (size_t i = table.size() - 1; i > 0; --i) { // Start from the last row and move up
             const auto& row = get<vector<variant<int, string>>>(table[i]);
-            if (holds_alternative<string>(row[column_index]) && get<string>(row[column_index]) == value) {
-                row_index = i;
-                break;
+            if (holds_alternative<string>(row[column_index])) {
+                if (get<string>(row[column_index]) == value) {
+                    table.erase(table.begin() + i); // Remove the row
+                }
+            } else if (holds_alternative<int>(row[column_index])) {
+                if (to_string(get<int>(row[column_index])) == value) {
+                    table.erase(table.begin() + i); // Remove the row
+                }
             }
         }
-        //error capturing
-        if (row_index == -1) {
-            cout << "Row not found" << endl;
-            return;
-        }
 
-        // Delete the row
-        table.erase(table.begin() + row_index); 
-
+        size_t deleted_rows = initial_size - table.size();
+        cout << "Deleted " << deleted_rows << " row(s) from table '" << table_name << "'" << endl;
     } else {
-        cout << "No delete data found" << endl;
+        cout << "Invalid DELETE statement." << endl;
     }
 }
 
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
+    vector<string> lines;
+
     for (size_t i = 1; i < table.size(); i++) {
         // Get the row as a vector of integers or strings
         const auto& row = get<vector<variant<int, string>>>(table[i]);
+        string line;  // String to store the current row
 
-        // Print each cell in the row
         for (const auto& cell : row) {
             if (holds_alternative<string>(cell)) { // if cell is a string, then get it as string
                 cout << get<string>(cell);
+                line += get<string>(cell);
             } else {
                 cout << get<int>(cell);   // if cell is an integer, then get it as integer
+                line += to_string(get<int>(cell));
             }
             if (&cell != &row.back()) {   // compare the address of the cell with the address of the last cell in the row
                 cout << ", "; // Print separator if cell is not the last one
+                line += ", ";
             }
         }
         cout << endl;
+        lines.push_back(line);
     }
+    write_to_file(lines, "output.txt");  // Use a prefixed output filename
 }
 
 #endif
