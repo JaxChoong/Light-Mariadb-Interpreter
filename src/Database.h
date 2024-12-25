@@ -15,7 +15,9 @@ vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_table_data(const string& Create, int table_index);
 void process_insert_data(const string& Insert, int table_index);
 void process_delete_data (const string& Delete, int table_index);
+
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
+void write_tables_to_csv(const string& filename);
 
 void process_table_data(const string& Create, int table_index) {
     smatch m;
@@ -131,7 +133,7 @@ void process_delete_data (const string& Delete, int table_index) {
             cout << "Row not found" << endl;
             return;
         }
-        
+
         // Delete the row
         table.erase(table.begin() + row_index); 
 
@@ -159,6 +161,55 @@ void print_table (const vector<variant<string, vector<variant<int, string>>>>& t
             }
         }
         cout << endl;
+    }
+}
+
+void write_tables_to_csv(const string &filename) {
+    ofstream file(filename); // Open the file for writing
+
+    if (!file.is_open()) {
+        cerr << "Error: Could not open file for writing: " << filename << endl;
+        return;
+    }
+
+    for (const auto& table : tables) {
+        // Get the table name
+        const string& table_name = get<string>(table[0]);
+
+        // Write the table name to the file
+        file << table_name << endl;
+
+        // Get the headers
+        const auto& headers = get<vector<variant<int, string>>>(table[0]);
+
+        // Write the headers to the file
+        for (size_t i = 0; i < headers.size(); i++) {
+            file << get<string>(headers[i]);
+
+            // Compare the place of the header with the address of the last header
+            if (&headers[i] != &headers.back()) {
+                file << ", "; // print , if not the last one
+            }
+        }
+        file << endl;
+
+        // Write the rows to the file
+        for (size_t i = 1; i < table.size(); i++) {
+            const auto& row = get<vector<variant<int, string>>>(table[i]);
+
+            for (size_t j = 0; j < row.size(); j++) {
+                if (holds_alternative<int>(row[j])) {
+                    file << get<int>(row[j]);
+                } else {
+                    file << get<string>(row[j]);
+                }
+
+                if (&row[j] != &row.back()) {
+                    file << ", ";
+                }
+            }
+            file << endl;
+        }
     }
 }
 
@@ -204,5 +255,4 @@ void deleteData() {
 void countRows() {
 
 }
-
 #endif
