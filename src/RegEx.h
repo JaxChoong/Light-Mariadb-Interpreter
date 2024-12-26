@@ -6,14 +6,19 @@
 #include <vector>
 #include <iostream>
 #include <variant>
+#include "FileManip.h"
 
 using namespace std;
 
 void process_table_data(const string& create_command, int table_index);
 vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_insert_data(const string& insert_command, int table_index);
+void process_delete_data(const string& Delete, int table_index);
 int table_index = -1;
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
+void write_to_file(const vector<string>& lines, const std::string& output_filename); 
+vector<variant<string, vector<string>>> processed_command_outputs;
+
 
 vector<string> get_create_type(const string& create_command) {
     regex database_command(R"(DATABASE\s+(\w+))");
@@ -90,13 +95,15 @@ void process_line(const string& line, string current_database) {
         cout << "Update this" << endl;
     }
     if (regex_search(line, m, delete_command)) {
-        cout << "Delete this" << endl;
+        process_delete_data(line, table_index);
     }
     if (regex_search(line, m, databases_command)) {
+        processed_command_outputs.push_back(current_database);
         cout << current_database << endl;
     }
     if (regex_search(line, m, tables_command)) {
         for (const auto& table : tables) {
+            processed_command_outputs.push_back(get<string>(table[0]));
             cout << get<string>(table[0]) << endl;
         }
     }
@@ -173,24 +180,84 @@ void process_insert_data(const string& insert_command, int table_index) {
     }
 }
 
+void process_delete_data (const string& Delete, int table_index) {
+    smatch m;
+    regex get_delete_data(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
+    cout << Delete << endl;
+
+    if (regex_search(Delete, m, get_delete_data)) {
+        string table_name = m[1].str();
+        string condition = m[2].str();
+        string value = m[3].str();
+        
+        if (table_index == -1) {
+            cout << "No table selected" << endl;
+            return;
+        }
+
+        auto& table = tables[table_index];
+        auto& headers = get<vector<variant<int, string>>>(table[1]);
+
+        // Find the index of the column to delete from
+        int column_index = -1;
+
+        for (size_t i = 0; i < headers.size(); i++) {
+            if (get<string>(headers[i]) == condition) {
+                column_index = i;
+                break;
+            }
+        }
+
+        if (column_index == -1) {
+            cout << "Column not found" << endl;
+            return;
+        }
+
+        size_t initial_size = table.size();
+        for (size_t i = table.size() - 1; i > 0; --i) { // Start from the last row and move up
+            const auto& row = get<vector<variant<int, string>>>(table[i]);
+            if (holds_alternative<string>(row[column_index])) {
+                if (get<string>(row[column_index]) == value) {
+                    table.erase(table.begin() + i); // Remove the row
+                }
+            } else if (holds_alternative<int>(row[column_index])) {
+                if (to_string(get<int>(row[column_index])) == value) {
+                    table.erase(table.begin() + i); // Remove the row
+                }
+            }
+        }
+
+        size_t deleted_rows = initial_size - table.size();
+    } else {
+        cout << "Invalid DELETE statement." << endl;
+    }
+}
+
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
+    vector<string> lines;    // saves the table's lines
+
     for (size_t i = 1; i < table.size(); i++) {
         // Get the row as a vector of integers or strings
         const auto& row = get<vector<variant<int, string>>>(table[i]);
+        string line;  // String to store the current row
 
-        // Print each cell in the row
         for (const auto& cell : row) {
             if (holds_alternative<string>(cell)) { // if cell is a string, then get it as string
                 cout << get<string>(cell);
+                line += get<string>(cell);
             } else {
                 cout << get<int>(cell);   // if cell is an integer, then get it as integer
+                line += to_string(get<int>(cell));
             }
             if (&cell != &row.back()) {   // compare the address of the cell with the address of the last cell in the row
                 cout << ", "; // Print separator if cell is not the last one
+                line += ", ";
             }
         }
         cout << endl;
+        lines.push_back(line);
     }
+    processed_command_outputs.push_back(lines);
 }
 
 #endif
