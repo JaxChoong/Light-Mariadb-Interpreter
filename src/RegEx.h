@@ -16,7 +16,9 @@ void process_insert_data(const string& insert_command, int table_index);
 void process_delete_data(const string& Delete, int table_index);
 int table_index = -1;
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
-void write_to_file(const vector<string>& lines, const std::string& output_filename); // Function prototype
+void write_to_file(const vector<string>& lines, const std::string& output_filename); 
+vector<variant<string, vector<string>>> processed_command_outputs;
+
 
 vector<string> get_create_type(const string& create_command) {
     regex database_command(R"(DATABASE\s+(\w+))");
@@ -93,14 +95,15 @@ void process_line(const string& line, string current_database) {
         cout << "Update this" << endl;
     }
     if (regex_search(line, m, delete_command)) {
-        cout << line << endl;
         process_delete_data(line, table_index);
     }
     if (regex_search(line, m, databases_command)) {
+        processed_command_outputs.push_back(current_database);
         cout << current_database << endl;
     }
     if (regex_search(line, m, tables_command)) {
         for (const auto& table : tables) {
+            processed_command_outputs.push_back(get<string>(table[0]));
             cout << get<string>(table[0]) << endl;
         }
     }
@@ -185,10 +188,7 @@ void process_delete_data (const string& Delete, int table_index) {
     if (regex_search(Delete, m, get_delete_data)) {
         string table_name = m[1].str();
         string condition = m[2].str();
-        cout << table_name << endl;
-        cout << condition << endl;
         string value = m[3].str();
-        cout << value << endl;
         
         if (table_index == -1) {
             cout << "No table selected" << endl;
@@ -228,14 +228,13 @@ void process_delete_data (const string& Delete, int table_index) {
         }
 
         size_t deleted_rows = initial_size - table.size();
-        cout << "Deleted " << deleted_rows << " row(s) from table '" << table_name << "'" << endl;
     } else {
         cout << "Invalid DELETE statement." << endl;
     }
 }
 
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
-    vector<string> lines;
+    vector<string> lines;    // saves the table's lines
 
     for (size_t i = 1; i < table.size(); i++) {
         // Get the row as a vector of integers or strings
@@ -258,7 +257,7 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
         cout << endl;
         lines.push_back(line);
     }
-    write_to_file(lines, "output.txt");  // Use a prefixed output filename
+    processed_command_outputs.push_back(lines);
 }
 
 #endif
