@@ -98,8 +98,16 @@ void process_line(const string& line, string current_database) {
         process_delete_data(line, table_index);
     }
     if (regex_search(line, m, databases_command)) {
-        processed_command_outputs.push_back(current_database);
-        cout << current_database << endl;
+
+        char full_path[FILENAME_MAX];    // saves the full path 
+        _fullpath(full_path, (current_database).c_str(), FILENAME_MAX);   // gets the full path of the current database
+                                                                          // _fullpath gets the full path of the current database
+                                                                          // first param is the variable to save the path
+                                                                          // second param is database to find
+                                                                          // third param is the max length of the path
+        string database_path = full_path;
+        cout << database_path << endl;
+        processed_command_outputs.push_back(database_path);
     }
     if (regex_search(line, m, tables_command)) {
         for (const auto& table : tables) {
