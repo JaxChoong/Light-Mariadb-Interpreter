@@ -7,6 +7,7 @@
 #include <iostream>
 #include <variant>
 #include "FileManip.h"
+#include <stdexcept>   // for runtime_error handling
 
 using namespace std;
 
@@ -81,7 +82,7 @@ void process_line(const string& line, string current_database) {
         cout << "Drop this" << endl;
     }
     if (regex_search(line, m, insert_command)) {
-        process_insert_data(m[2].str(), table_index);
+        process_insert_data(m[2].str(), table_index); 
     }
     if (regex_search(line, m, select_command)) {
         // checks if the select command is "SELECT *" ( npos means not found)
@@ -155,89 +156,115 @@ void process_insert_data(const string& insert_command, int table_index) {
     regex get_insert_data(R"(VALUES\s*\((.*)\))");
 
     if (regex_search(insert_command, m, get_insert_data)) {
-        string insert_data = m[1].str(); // Captures the values inside VALUES(...)
+        try {
+            string insert_data = m[1].str(); // Captures the values inside VALUES(...)
 
-        // Split the captured string into individual values
-        regex value_regex(R"('([^']*)'|([^,]+))");
-        auto begin = sregex_iterator(insert_data.begin(), insert_data.end(), value_regex);
-        auto end = sregex_iterator();
-
-        vector<variant<int, string>> table_data;
-
-        for (auto it = begin; it != end; ++it) {
-            string value = (*it)[1].matched ? (*it)[1].str() : (*it)[2].str();
-            // Check if the value is an integer or a string
-            if (!value.empty() && all_of(value.begin(), value.end(), ::isdigit)) {
-                table_data.push_back(stoi(value)); // Add as integer
-            } else {
-                table_data.push_back(value); // Add as string
+            if (insert_data.empty()) {
+                throw runtime_error("Error: No insert data found");
             }
+
+            // Split the captured string into individual values
+            regex value_regex(R"('([^']*)'|([^,]+))");
+            auto begin = sregex_iterator(insert_data.begin(), insert_data.end(), value_regex);
+            auto end = sregex_iterator();
+
+            vector<variant<int, string>> table_data;
+
+            for (auto it = begin; it != end; ++it) {
+                string value = (*it)[1].matched ? (*it)[1].str() : (*it)[2].str();
+                // Check if the value is an integer or a string
+                if (!(*it)[1].matched && all_of(value.begin(), value.end(), ::isdigit)) {
+                    table_data.push_back(stoi(value)); // Add as integer
+                } else {
+                    table_data.push_back(value); // Add as string
+                }
+            }
+
+            // Ensure the table index is initialized
+            while (tables.size() <= table_index) {
+                tables.emplace_back(); // Add empty vectors for missing indices
+            }
+
+            // Add data to the table
+            tables[table_index].push_back(table_data);
+
+        } catch (const runtime_error& error) {
+            cout << error.what() << endl;
         }
-        cout << endl;
-
-        // Ensure the table index is initialized
-        while (tables.size() <= table_index) {
-            tables.emplace_back(); // Add empty vectors for missing indices
-        }
-
-        // Add data to the table
-        tables[table_index].push_back(table_data);
-
     } else {
-        cout << "No insert data found" << endl;
+        cout << "Error: No insert data found." << endl;
     }
 }
 
-void process_delete_data (const string& Delete, int table_index) {
-    smatch m;
-    regex get_delete_data(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
-    cout << Delete << endl;
+void process_delete_data(const string& Delete, int table_index) {
+    try {
+        smatch m;
 
-    if (regex_search(Delete, m, get_delete_data)) {
-        string table_name = m[1].str();
-        string condition = m[2].str();
-        string value = m[3].str();
-        
-        if (table_index == -1) {
-            cout << "No table selected" << endl;
-            return;
-        }
+        // Regex to match DELETE statement
+        regex get_delete_data(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
 
-        auto& table = tables[table_index];
-        auto& headers = get<vector<variant<int, string>>>(table[1]);
+        cout << Delete << endl;
 
-        // Find the index of the column to delete from
-        int column_index = -1;
+        if (regex_search(Delete, m, get_delete_data)) {
+            string table_name = m[1].str();
+            string condition = m[2].str();
+            string value = m[3].str();
 
-        for (size_t i = 0; i < headers.size(); i++) {
-            if (get<string>(headers[i]) == condition) {
-                column_index = i;
-                break;
+            if (table_index == -1 || table_index >= tables.size()) {
+                throw runtime_error("Error: No valid table selected");
             }
-        }
 
-        if (column_index == -1) {
-            cout << "Column not found" << endl;
-            return;
-        }
+            auto& table = tables[table_index];
+            if (table.empty()) {
+                throw runtime_error("Error: Table is empty or does not exist");
+            }
 
-        size_t initial_size = table.size();
-        for (size_t i = table.size() - 1; i > 0; --i) { // Start from the last row and move up
-            const auto& row = get<vector<variant<int, string>>>(table[i]);
-            if (holds_alternative<string>(row[column_index])) {
-                if (get<string>(row[column_index]) == value) {
-                    table.erase(table.begin() + i); // Remove the row
-                }
-            } else if (holds_alternative<int>(row[column_index])) {
-                if (to_string(get<int>(row[column_index])) == value) {
-                    table.erase(table.begin() + i); // Remove the row
+            // Access headers (assumes the first row contains headers)
+            auto& headers = get<vector<variant<int, string>>>(table[0]);
+
+            // Find the index of the column to delete from
+            int column_index = -1;
+
+            for (size_t i = 0; i < headers.size(); i++) {
+                if (holds_alternative<string>(headers[i]) && get<string>(headers[i]) == condition) {
+                    column_index = i;
+                    break;
                 }
             }
-        }
 
-        size_t deleted_rows = initial_size - table.size();
-    } else {
-        cout << "Invalid DELETE statement." << endl;
+            if (column_index == -1) {
+                throw runtime_error("Error: Column '" + condition + "' not found in table");
+            }
+
+            size_t initial_size = table.size();
+            for (size_t i = table.size() - 1; i > 0; --i) { // Start from the last row and move up
+                const auto& row = get<vector<variant<int, string>>>(table[i]);
+                if (column_index >= row.size()) {
+                    throw runtime_error("Error: Row has fewer columns than expected");
+                }
+
+                // Compare value based on type
+                if (holds_alternative<string>(row[column_index])) {
+                    if (get<string>(row[column_index]) == value) {
+                        table.erase(table.begin() + i); // Remove the row
+                    }
+                } else if (holds_alternative<int>(row[column_index])) {
+                    if (to_string(get<int>(row[column_index])) == value) {
+                        table.erase(table.begin() + i); // Remove the row
+                    }
+                } else {
+                    throw runtime_error("Error: Unsupported data type in column");
+                }
+            }
+
+            size_t deleted_rows = initial_size - table.size();
+            cout << "Deleted " << deleted_rows << " row(s) matching the condition." << endl;
+
+        } else {
+            throw runtime_error("Error: Invalid DELETE statement");
+        }
+    } catch (const runtime_error& error) {
+        cout << "Error: " << error.what() << endl;
     }
 }
 
@@ -267,5 +294,6 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
     }
     processed_command_outputs.push_back(lines);
 }
+
 
 #endif
