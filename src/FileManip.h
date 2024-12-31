@@ -64,6 +64,10 @@ void read_file(const string& filename) {
                 processed_command_outputs.push_back("> " + line);
                 cout << "> " << line << endl;
             }
+            else{
+                processed_command_outputs.push_back(line);
+                cout << line << endl;
+            }
             // Process the command and handle any multi-line output internally
             process_line(line, filename);
         }
