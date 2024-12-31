@@ -199,7 +199,6 @@ void process_insert_data(const string& insert_command, int table_index) {
 void process_delete_data (const string& Delete, int table_index) {
     smatch m;
     regex get_delete_data(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
-    cout << Delete << endl;
 
     if (regex_search(Delete, m, get_delete_data)) {
         string table_name = m[1].str();

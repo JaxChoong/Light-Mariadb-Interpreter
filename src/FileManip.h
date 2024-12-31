@@ -62,14 +62,15 @@ void read_file(const string& filename) {
             if (!line.empty()) {
                 // Add line to processed_command_outputs as a single string
                 processed_command_outputs.push_back("> " + line);
-                cout << "> " << line << endl;
+                cout << "> " << line << endl;            
+                // Process the command and handle any multi-line output internally
+                process_line(line, filename);
             }
             else{
                 processed_command_outputs.push_back(line);
                 cout << line << endl;
             }
-            // Process the command and handle any multi-line output internally
-            process_line(line, filename);
+
         }
         file.close();
 
