@@ -107,39 +107,260 @@
     }
 
     void createDatabase() {
+    string dbName;
+    cout << "Enter the name of the new database: ";
+    cin >> dbName;
 
+    string dbPath = "../Data/" + dbName + ".mdb";
+
+    if (filesystem::exists(dbPath)) {
+        cout << "Database already exists!" << endl;
+        return;
+    }
+
+    ofstream dbFile(dbPath);
+    if (dbFile) {
+        cout << "Database " << dbName << " created successfully." << endl;
+        dbFile.close();
+    } else {
+        cout << "Failed to create database." << endl;
+    }
     }
 
     void viewDatabase() {
+     string databaseDirectory = "../Data";
 
+    vector<string> databaseFiles = getDatabaseFiles(databaseDirectory);
+
+    if (databaseFiles.empty()) {
+        cout << "No databases found." << endl;
+        return;
+    }
+
+    cout << "Available Databases:" << endl;
+    for (const auto& file : databaseFiles) {
+        cout << "- " << file << endl;
     }
 
     void createTable() {
+    string tableName;
+    int columnCount;
 
+    cout << "Enter the name of the table: ";
+    cin >> tableName;
+
+    cout << "Enter the number of columns: ";
+    cin >> columnCount;
+
+    Table table;
+    table.name = tableName;
+
+    for (int i = 0; i < columnCount; ++i) {
+        Column column;
+        cout << "Enter name for column " << (i + 1) << ": ";
+        cin >> column.name;
+        cout << "Enter type for column " << (i + 1) << " (e.g., int, string): ";
+        cin >> column.type;
+        table.columns.push_back(column);
+    }
+
+    cout << "Table " << tableName << " with " << columnCount << " columns created successfully." << endl;
     }
 
     void viewTable() {
+    string tableName;
+    cout << "Enter the name of the table to view: ";
+    cin >> tableName;
 
+    // Example logic to simulate table content (replace with actual implementation)
+    Table table;
+    table.name = tableName;
+    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
+    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+
+    // Display the table
+    cout << "Table: " << table.name << endl;
+    for (const auto& col : table.columns) {
+        cout << col.name << " (" << col.type << ")	";
+    }
+    cout << endl;
+
+    for (const auto& row : table.rows) {
+        for (const auto& cell : row) {
+            cout << cell << "	";
+        }
+        cout << endl;
     }
 
     void insertData() {
+    string tableName;
+    cout << "Enter the name of the table to insert data into: ";
+    cin >> tableName;
 
+    // Simulated table structure (replace with actual implementation)
+    Table table;
+    table.name = tableName;
+    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
+
+    if (table.columns.empty()) {
+        cout << "Table does not exist or has no defined columns." << endl;
+        return;
+    }
+
+    vector<string> newRow;
+    for (const auto& column : table.columns) {
+        string value;
+        cout << "Enter value for " << column.name << " (" << column.type << "): ";
+        cin >> value;
+        newRow.push_back(value);
+    }
+
+    table.rows.push_back(newRow);
+    cout << "Data inserted successfully into table " << table.name << "." << endl;
+}
+
+    ofstream dbFile(dbPath, ios::app);
+    if (!dbFile) {
+        cout << "Failed to open database." << endl;
+        return;
+    }
+
+    string data;
+    cout << "Enter the data to insert: ";
+    cin.ignore(); // Clear newline character from input buffer
+    getline(cin, data);
+
+    dbFile << data << endl;
+    cout << "Data inserted into database " << dbName << " successfully." << endl;
+    dbFile.close();
     }
 
     void viewTableCSV() {
+    string tableName;
+    cout << "Enter the name of the table to view as CSV: ";
+    cin >> tableName;
 
+    // Simulated table structure (replace with actual implementation)
+    Table table;
+    table.name = tableName;
+    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
+    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+
+    if (table.rows.empty()) {
+        cout << "Table is empty or does not exist." << endl;
+        return;
     }
 
-    void updateData() {
+    // Print table data as CSV
+    for (size_t i = 0; i < table.columns.size(); ++i) {
+        cout << table.columns[i].name;
+        if (i < table.columns.size() - 1) cout << ",";
+    }
+    cout << endl;
 
+    for (const auto& row : table.rows) {
+        for (size_t i = 0; i < row.size(); ++i) {
+            cout << row[i];
+            if (i < row.size() - 1) cout << ",";
+        }
+        cout << endl;
+    }
+
+
+    void updateData() {
+    string tableName;
+    cout << "Enter the name of the table to update data in: ";
+    cin >> tableName;
+
+    // Simulated table structure (replace with actual implementation)
+    Table table;
+    table.name = tableName;
+    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
+    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+
+    if (table.rows.empty()) {
+        cout << "Table is empty or does not exist." << endl;
+        return;
+    }
+
+    cout << "Current table data:" << endl;
+    for (size_t i = 0; i < table.rows.size(); ++i) {
+        cout << i + 1 << ". ";
+        for (const auto& cell : table.rows[i]) {
+            cout << cell << "	";
+        }
+        cout << endl;
+    }
+
+    size_t rowIndex;
+    cout << "Enter the row number to update: ";
+    cin >> rowIndex;
+
+    if (rowIndex < 1 || rowIndex > table.rows.size()) {
+        cout << "Invalid row number." << endl;
+        return;
+    }
+
+    vector<string>& rowToUpdate = table.rows[rowIndex - 1];
+    for (size_t i = 0; i < table.columns.size(); ++i) {
+        string newValue;
+        cout << "Enter new value for " << table.columns[i].name << " (" << table.columns[i].type << ") [Current: " << rowToUpdate[i] << "]: ";
+        cin >> newValue;
+        rowToUpdate[i] = newValue;
+    }
+
+    cout << "Row updated successfully." << endl;
     }
 
     void deleteData() {
+`   string tableName;
+    cout << "Enter the name of the table to delete data from: ";
+    cin >> tableName;
 
+    // Simulated table structure (replace with actual implementation)
+    Table table;
+    table.name = tableName;
+    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
+    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+
+    if (table.rows.empty()) {
+        cout << "Table is empty or does not exist." << endl;
+        return;
+    }
+
+    cout << "Current table data:" << endl;
+    for (size_t i = 0; i < table.rows.size(); ++i) {
+        cout << i + 1 << ". ";
+        for (const auto& cell : table.rows[i]) {
+            cout << cell << "	";
+        }
+        cout << endl;
+    }
+
+    size_t rowIndex;
+    cout << "Enter the row number to delete: ";
+    cin >> rowIndex;
+
+    if (rowIndex < 1 || rowIndex > table.rows.size()) {
+        cout << "Invalid row number." << endl;
+        return;
+    }
+
+    table.rows.erase(table.rows.begin() + rowIndex - 1);
+    cout << "Row deleted successfully." << endl;
     }
 
     void countRows() {
+    string tableName;
+    cout << "Enter the name of the table to count rows in: ";
+    cin >> tableName;
 
+    // Simulated table structure (replace with actual implementation)
+    Table table;
+    table.name = tableName;
+    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+
+    cout << "The table " << tableName << " has " << table.rows.size() << " rows." << endl;
     }
 
     vector<string> get_database_files() {
