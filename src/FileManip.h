@@ -8,6 +8,7 @@
 #include "RegEx.h"
 #include <variant>
 #include <vector>
+#include "getFileName.h"
 
 using namespace std;
 
@@ -40,15 +41,12 @@ void write_to_file(const vector<variant<string, vector<string>>>& lines) {
 }
 
 string get_output_filename(const string& filename) {
-    // Get the filename without the extension
-    size_t lastindex = filename.find_last_of(".");     // gets position of the . character
-    string name_without_extension = filename.substr(0, lastindex);    // gets the filename without the extension ( .mdb)
-    cout << name_without_extension << endl;
-    size_t pos = name_without_extension.find("Input");  // gets the position of the "Input" string as substring
-    if (pos != string::npos) {
-        name_without_extension.replace(pos, 5, "Output");     // if found, replace "Input" with "Output"
-    }
-    return name_without_extension + ".txt";
+    // read first line of the file 
+    ifstream file("../Data/" + filename);
+    string first_line;
+    getline(file, first_line);
+    extract_filename(first_line);
+    return extract_filename(first_line);
 }
 
 void read_file(const string& filename) {

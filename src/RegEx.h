@@ -7,6 +7,7 @@
 #include <iostream>
 #include <variant>
 #include "FileManip.h"
+#include "getFileName.h"
 
 using namespace std;
 
