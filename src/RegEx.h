@@ -13,29 +13,23 @@ using namespace std;
 
 // Function prototypes
 void process_table_data(const string& create_command, int table_index);
-vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_insert_data(const string& insert_command, int table_index);
 void process_delete_data(const string& delete_command, int table_index);
-int table_index = -1;
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
 void write_to_file(const vector<string>& lines, const std::string& output_filename); 
-vector<variant<string, vector<string>>> processed_command_outputs;
+
+// global variables
+int table_index = -1;
+vector<vector<variant<string, vector<variant<int, string>>>>> tables;    // 2d table vector
+vector<variant<string, vector<string>>> processed_command_outputs;      // vector to store processed lines, to output to file
 
 // Function to process CREATE commands
 vector<string> get_create_type(const string& create_command) {
-    regex database_command(R"(DATABASE\s+(\w+))");
     regex table_command(R"(TABLE\s+(\w+)\s*\()");
     regex output_file_command(R"((.*).txt)");
 
-    smatch m;
-    if (regex_search(create_command, m, database_command)) 
-    {
-        // detects if the command is to create a database
-        cout << "Create database" << endl;
-        string database_name = m[1].str();
-        return {"database_name", database_name};
-    } 
-    else if (regex_search(create_command, m, table_command)) 
+    smatch m; 
+    if (regex_search(create_command, m, table_command)) 
     {
         string table_name = m[1].str();
 
@@ -52,16 +46,18 @@ vector<string> get_create_type(const string& create_command) {
         if (table_index == -1) 
         { // if table name is not found
             tables.push_back({table_name}); // Add the table name as the first entry
+                                            // the {} creates a vector
             table_index = tables.size() - 1;
         }
 
-        process_table_data(create_command, table_index); 
+        process_table_data(create_command, table_index);  // process the table data
         return {"table_name", table_name};
     } 
     else if (regex_search(create_command, m, output_file_command)) 
     {
         // detects if the command is to create an output file
-        string output_file_name = m[1].str() + ".txt";    // for now no actual output file creation, just for demonstration
+        // this function is now useless since our output is in filemanip.h lol
+        string output_file_name = m[1].str() + ".txt";    
         return {"output_file_name", output_file_name};
     }
     return {};
@@ -72,7 +68,6 @@ void process_line(const string& line, string current_database) {
 
     // regex to match the different commands
     regex create_command(R"(CREATE\s+(.*))");
-    regex drop_command("(DROP)(.*)");
     regex insert_command("(INSERT)(.*)");
     regex select_command("(SELECT)(.*)");
     regex update_command("(UPDATE)(.*)");
@@ -83,7 +78,7 @@ void process_line(const string& line, string current_database) {
     smatch m;
     if (regex_search(line, m, create_command)) 
     {
-        // try and get what type of thing is being created (db/table/output file)
+        // try and get what type of thing is being created (table/output file)
         vector<string> create_type_vector = get_create_type(m[1].str());
         if (create_type_vector.empty()) 
         {
@@ -91,13 +86,9 @@ void process_line(const string& line, string current_database) {
         }
     }
 
-    if (regex_search(line, m, drop_command)) 
-    {
-        cout << "Drop this" << endl;
-    }
-
     if (regex_search(line, m, insert_command)) 
     {
+        // if insert command is found, process the insert data
         process_insert_data(m[2].str(), table_index);
     }
 
@@ -105,6 +96,7 @@ void process_line(const string& line, string current_database) {
     {
         // checks if the select command is "SELECT *" ( npos means not found)
         if (m[2].str().find(" *") != std::string::npos) {
+            // if command is 'SELECT *', print the table
             print_table( tables[table_index] );
         } else {
             cout << "Select this" << endl;
@@ -118,6 +110,7 @@ void process_line(const string& line, string current_database) {
 
     if (regex_search(line, m, delete_command)) 
     {
+        // if delete command is found, process the delete data
         process_delete_data(line, table_index);
     }
     if (regex_search(line, m, databases_command)) {
@@ -135,8 +128,10 @@ void process_line(const string& line, string current_database) {
 
     if (regex_search(line, m, tables_command)) 
     {
+        // if the command is to show the tables, print the table names
         for (const auto& table : tables) 
         {
+            //  go through each of the tables and print the table name in the first index
             processed_command_outputs.push_back(get<string>(table[0]));
             cout << get<string>(table[0]) << endl;
         }
@@ -155,14 +150,16 @@ void process_table_data(const string& create_command, int table_index) {
 
         // Extract individual columns
         regex column_regex(R"((\w+)\s+(\w+))");  // seperates the column name and the column type by a space
-        auto begin = sregex_iterator(table_data.begin(), table_data.end(), column_regex);
-        auto end = sregex_iterator();
+        auto begin = sregex_iterator(table_data.begin(), table_data.end(), column_regex);  //tells the iterator to start at the beginning of the string, and match the regex
+        auto end = sregex_iterator();   // tells the iterator to end at the end of the string
 
         vector<variant<int, string>> table_headers;
 
+        // start iterator(it) in the beginning, and while its not at the end, increment iterator
         for (auto it = begin; it != end; ++it) 
         {
-            table_headers.push_back((*it)[1].str()); // Add column name
+            // add the column name to the table headers
+            table_headers.push_back((*it)[1].str());
         }
 
         // Ensure the table index is initialized
@@ -194,14 +191,20 @@ void process_insert_data(const string& insert_command, int table_index) {
 
         // Split the captured string into individual values
         regex value_regex(R"('([^']*)'|([^,]+))");
+        // start iterator(it) in the beginning, and while its not at the end, increment iterator
         auto begin = sregex_iterator(insert_data.begin(), insert_data.end(), value_regex);
         auto end = sregex_iterator();
 
         vector<variant<int, string>> table_data;
 
+        // start iterator(it) in the beginning, and while its not at the end, increment iterator
         for (auto it = begin; it != end; ++it) 
         {
+            // get the value of the cell
+            // if the first group is matched, get the first group, else get the second group
+            // this basically means if the first group matches the regex, get the first group, else get the second group
             string value = (*it)[1].matched ? (*it)[1].str() : (*it)[2].str();
+
             // Check if the value is an integer or a string
             if (!value.empty() && all_of(value.begin(), value.end(), ::isdigit)) 
             {
@@ -274,6 +277,7 @@ void process_delete_data (const string& delete_command, int table_index) {
         for (size_t i = table.size() - 1; i > 0; --i) 
         { // Start from the last row and move up
             const auto& row = get<vector<variant<int, string>>>(table[i]);
+            // if the row is a string, and the value is the same as the value to delete
             if (holds_alternative<string>(row[column_index])) 
             {
                 if (get<string>(row[column_index]) == value) 
@@ -281,6 +285,7 @@ void process_delete_data (const string& delete_command, int table_index) {
                     table.erase(table.begin() + i); // Remove the row
                 }
             } 
+            // if the row is an integer, and the value is the same as the value to delete
             else if (holds_alternative<int>(row[column_index])) 
             {
                 if (to_string(get<int>(row[column_index])) == value) 
@@ -290,7 +295,6 @@ void process_delete_data (const string& delete_command, int table_index) {
             }
         }
 
-        size_t deleted_rows = initial_size - table.size();
     } 
     else 
     {
