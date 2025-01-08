@@ -10,6 +10,7 @@ customer
 > INSERT INTO customer(customer_id,customer_name,customer_city,customer_state,customer_country,custom er_phone,customer_email) VALUES (2,'name2','city2','state2','country2','phone2','email2'); 
 > INSERT INTO customer(customer_id,customer_name,customer_city,customer_state,customer_country,custom er_phone,customer_email) VALUES (3,'name3','city3','state3','country3','phone3','email3'); 
 > INSERT INTO customer(customer_id,customer_name,customer_city,customer_state,customer_country,custom er_phone,customer_email) VALUES ();
+Error: No insert data found
 
 > SELECT * FROM customer;
 customer_id, customer_name, customer_city, customer_state, customer_country, customer_phone, customer_email

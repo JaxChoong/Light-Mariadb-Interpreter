@@ -16,8 +16,7 @@ vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_insert_data(const string& insert_command, int table_index);
 void process_delete_data(const string& Delete, int table_index);
 int table_index = -1;
-void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
-void write_to_file(const vector<string>& lines, const std::string& output_filename); 
+void print_table(const vector<variant<string, vector<variant<int, string>>>>& table); 
 vector<variant<string, vector<string>>> processed_command_outputs;
 
 
@@ -75,11 +74,9 @@ void process_line(const string& line, string current_database) {
         // try and get what type of thing is being created (db/table/output file)
         vector<string> create_type_vector = get_create_type(m[1].str());
         if (create_type_vector.empty()) {
+            processed_command_outputs.push_back("Error: Couldn't find create types.");
             cout << "Error: Couldn't find create types." << endl;
         }
-    }
-    if (regex_search(line, m, drop_command)) {
-        cout << "Drop this" << endl;
     }
     if (regex_search(line, m, insert_command)) {
         process_insert_data(m[2].str(), table_index); 
@@ -145,6 +142,7 @@ void process_table_data(const string& create_command, int table_index) {
         tables[table_index].push_back(table_headers);
 
     } else {
+        processed_command_outputs.push_back("No table data found");
         cout << "No table data found" << endl;
     }
 }
@@ -189,6 +187,7 @@ void process_insert_data(const string& insert_command, int table_index) {
             tables[table_index].push_back(table_data);
 
         } catch (const runtime_error& error) {
+            processed_command_outputs.push_back(error.what());
             cout << error.what() << endl;
         }
     } else {
@@ -207,6 +206,7 @@ void process_delete_data (const string& Delete, int table_index) {
         
         if (table_index == -1) {
             cout << "No table selected" << endl;
+            processed_command_outputs.push_back("No table selected");
             return;
         }
 
@@ -225,6 +225,7 @@ void process_delete_data (const string& Delete, int table_index) {
 
         if (column_index == -1) {
             cout << "Column not found" << endl;
+            processed_command_outputs.push_back("Column not found");
             return;
         }
 
@@ -244,6 +245,7 @@ void process_delete_data (const string& Delete, int table_index) {
 
         size_t deleted_rows = initial_size - table.size();
     } else {
+        processed_command_outputs.push_back("Invalid DELETE statement.");
         cout << "Invalid DELETE statement." << endl;
     }
 }
