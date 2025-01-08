@@ -28,6 +28,7 @@ using namespace std;
 
 vector<string> get_database_files();
 string choose_database(vector<string> database_files);
+void read_file(const string& filename);
 
 int main() {
     string current_database = "fileInput1.mdb";              // no user input so just put this for now lol
