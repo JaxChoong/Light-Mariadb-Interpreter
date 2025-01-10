@@ -7,15 +7,17 @@
 #include <iostream>
 #include <variant>
 #include "FileManip.h"
+#include <variant>
+#include <type_traits>
 
 using namespace std;
-
+vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_table_data(const string& create_command, int table_index);
 vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_insert_data(const string& insert_command, int table_index);
-void process_delete_data(const string& Delete, int table_index);
-int table_index = -1;
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
+int table_index = -1;
+vector<variant<string, vector<string>>> processed_command_outputs;
 void write_to_file(const vector<string>& lines, const std::string& output_filename); 
 vector<variant<string, vector<string>>> processed_command_outputs;
 
@@ -23,7 +25,7 @@ vector<variant<string, vector<string>>> processed_command_outputs;
 vector<string> get_create_type(const string& create_command) {
     regex database_command(R"(DATABASE\s+(\w+))");
     regex table_command(R"(TABLE\s+(\w+)\s*\()");
-    regex output_file_command(R"((.*).txt)");
+    smatch m;
 
     smatch m;
     if (regex_search(create_command, m, database_command)) {
@@ -35,7 +37,7 @@ vector<string> get_create_type(const string& create_command) {
     else if (regex_search(create_command, m, table_command)) {
         string table_name = m[1].str();
 
-        // Find or add the table name in the tables vector
+            if (get<string>(tables[i][0]) == table_name) {
         for (size_t i = 0; i < tables.size(); i++) {
             if (get<string>(tables[i][0]) == table_name) {
                 table_index = i;
@@ -77,14 +79,14 @@ void process_line(const string& line, string current_database) {
 
         // Parse column definitions
         Table table;
-        table.name = table_name;
-        regex column_regex(R"((\w+)\s+(INT|TEXT))");
         auto begin = sregex_iterator(columns_definition.begin(), columns_definition.end(), column_regex);
+        auto end = sregex_iterator();
+        for (auto it = begin; it != end; ++it) {
         auto end = sregex_iterator();
         for (auto it = begin; it != end; ++it) {
             table.columns.push_back({ (*it)[1].str(), (*it)[2].str() });
         }
-
+        save_table_to_file(table, current_database);
         // Save the table to file
         save_table_to_file(table, current_database);
         cout << "Table " << table_name << " created successfully.\n";
@@ -96,7 +98,7 @@ void process_line(const string& line, string current_database) {
         string values_list = m[3].str();
 
         // Parse values
-        vector<string> values;
+        auto begin = sregex_iterator(values_list.begin(), values_list.end(), value_regex);
         regex value_regex(R"('([^']*)'|([^,]+))");
         auto begin = sregex_iterator(values_list.begin(), values_list.end(), value_regex);
         auto end = sregex_iterator();
@@ -122,7 +124,7 @@ void process_table_data(const string& create_command, int table_index) {
         // Extract individual columns
         regex column_regex(R"((\w+)\s+(\w+))");  // seperates the column name and the column type by a space
         auto begin = sregex_iterator(table_data.begin(), table_data.end(), column_regex);
-        auto end = sregex_iterator();
+        vector<variant<int, string>> table_headers;
 
         vector<variant<int, string>> table_headers;
 
@@ -155,7 +157,7 @@ void process_insert_data(const string& insert_command, int table_index) {
         // Split the captured string into individual values
         regex value_regex(R"('([^']*)'|([^,]+))");
         auto begin = sregex_iterator(insert_data.begin(), insert_data.end(), value_regex);
-        auto end = sregex_iterator();
+        vector<variant<int, string>> table_data;
 
         vector<variant<int, string>> table_data;
 
@@ -197,13 +199,13 @@ void process_delete_data (const string& Delete, int table_index) {
             cout << "No table selected" << endl;
             return;
         }
-
+        auto& headers = get<vector<variant<int, string>>>(table[1]);
         auto& table = tables[table_index];
         auto& headers = get<vector<variant<int, string>>>(table[1]);
 
         // Find the index of the column to delete from
         int column_index = -1;
-
+            if (get<string>(headers[i]) == condition) {
         for (size_t i = 0; i < headers.size(); i++) {
             if (get<string>(headers[i]) == condition) {
                 column_index = i;
@@ -216,13 +218,13 @@ void process_delete_data (const string& Delete, int table_index) {
             return;
         }
 
-        size_t initial_size = table.size();
-        for (size_t i = table.size() - 1; i > 0; --i) { // Start from the last row and move up
             const auto& row = get<vector<variant<int, string>>>(table[i]);
             if (holds_alternative<string>(row[column_index])) {
                 if (get<string>(row[column_index]) == value) {
-                    table.erase(table.begin() + i); // Remove the row
-                }
+            if (holds_alternative<string>(row[column_index])) {
+                if (get<string>(row[column_index]) == value) {
+            } else if (holds_alternative<int>(row[column_index])) {
+                if (to_string(get<int>(row[column_index])) == value) {
             } else if (holds_alternative<int>(row[column_index])) {
                 if (to_string(get<int>(row[column_index])) == value) {
                     table.erase(table.begin() + i); // Remove the row
@@ -234,7 +236,7 @@ void process_delete_data (const string& Delete, int table_index) {
     } else {
         cout << "Invalid DELETE statement." << endl;
     }
-}
+void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
 
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
     vector<string> lines;    // saves the table's lines
@@ -243,12 +245,12 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
         // Get the row as a vector of integers or strings
         const auto& row = get<vector<variant<int, string>>>(table[i]);
         string line;  // String to store the current row
-
-        for (const auto& cell : row) {
             if (holds_alternative<string>(cell)) { // if cell is a string, then get it as string
                 cout << get<string>(cell);
                 line += get<string>(cell);
-            } else {
+                cout << get<string>(cell);
+                cout << get<int>(cell);   // if cell is an integer, then get it as integer
+                line += to_string(get<int>(cell));
                 cout << get<int>(cell);   // if cell is an integer, then get it as integer
                 line += to_string(get<int>(cell));
             }

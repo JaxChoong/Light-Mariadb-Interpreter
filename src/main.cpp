@@ -20,13 +20,13 @@
     #include <fstream>
     #include <vector>
     #include <string>
-    #include <filesystem>
+    #include <experimental/filesystem>
     #include <limits>
     #include "FileManip.h"
     #include "RegEx.h"
 
     using namespace std;
-    namespace fs = std::filesystem;
+    namespace fs = std::experimental::filesystem;
 
     struct Column {
         string name;
@@ -70,15 +70,15 @@
         displayMenu();
         cin >> choice;
         switch (choice) {
-                case 1: createDatabase(choice); break;
-                case 2: dropDatabase(choice); break;
-                case 3: createTable(choice); break;
-                case 4:  dropTable(choice); break;
-                case 5: insertData(choice); break;
-                case 6: viewTableCSV(choice); break;
-                case 7: updateData(choice); break;
-                case 8: deleteData(choice); break;
-                case 9: countRows(choice); break;
+                case 1: createDatabase(); break;
+                case 2: dropDatabase(); break;
+                case 3: createTable(); break;
+                case 4: dropTable(); break;
+                case 5: insertData(); break;
+                case 6: viewTableCSV(); break;
+                case 7: updateData(); break;
+                case 8: deleteData(); break;
+                case 9: countRows(); break;
                 case 10: return 0;
                 default: cout << "Invalid choice. Please try again." << endl;
             }
@@ -136,6 +136,11 @@
 
         string dbPath = "../Data/" + dbName + ".mdb";
 
+        // Ensure the database directory exists
+        if (!filesystem::exists("../Data")) {
+            filesystem::create_directory("../Data");
+        }
+
         if (filesystem::exists(dbPath)) {
             cout << "Database already exists!" << endl;
             return;
@@ -153,7 +158,7 @@
     void viewDatabase() {
         string databaseDirectory = "../Data";
 
-        vector<string> databaseFiles = getDatabaseFiles(databaseDirectory);
+        vector<string> databaseFiles = get_database_files();
 
         if (databaseFiles.empty()) {
             cout << "No databases found." << endl;
@@ -612,29 +617,28 @@
     }
 
 
-        vector<string> get_database_files() {
-            vector<string> database_files;
-            filesystem::current_path(filesystem::path(__FILE__).parent_path());
-            for (const auto& entry : filesystem::directory_iterator("../Data")) {
+    vector<string> get_database_files() {
+        vector<string> database_files;
+        string databaseDirectory = "../Data";
+        for (const auto& entry : filesystem::directory_iterator(databaseDirectory)) {
+            if (entry.path().extension() == ".mdb") {
                 database_files.push_back(entry.path().filename().string());
             }
-            cout << "Databases found:" << endl;
-            int i = 0;
-            for (const auto& file : database_files) {
-                cout << "- "<< file << " ( Select with " << to_string(i) << " )"<< endl;
-                i++;
-            }
-            return database_files;
+        }
+        return database_files;
     }
 
-    string choose_database( vector<string> database_files) {
-        string database;
+    string choose_database(vector<string> database_files) {
         while (true) {
-            cout << "Choose a database: ";
+            cout << "Choose a database by number: " << endl;
+            for (size_t i = 0; i < database_files.size(); ++i) {
+                cout << i + 1 << ". " << database_files[i] << endl;
+            }
+            string database;
             cin >> database;
-            if (stoi(database) < database_files.size()) {
-                cout << "Selected database: " << database_files[stoi(database)] << endl <<endl;
-                return database_files[stoi(database)];
+            int index = stoi(database) - 1;
+            if (index >= 0 && index < database_files.size()) {
+                return database_files[index];
             } else {
                 cout << "Invalid choice. Please try again." << endl;
             }
