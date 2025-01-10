@@ -70,50 +70,45 @@ void process_line(const string& line, string current_database) {
     regex tables_command("(TABLES;)");
 
     smatch m;
-    if (regex_search(line, m, create_command)) {
-        // try and get what type of thing is being created (db/table/output file)
-        vector<string> create_type_vector = get_create_type(m[1].str());
-        if (create_type_vector.empty()) {
-            cout << "Error: Couldn't find create types." << endl;
-        }
-    }
-    if (regex_search(line, m, drop_command)) {
-        cout << "Drop this" << endl;
-    }
-    if (regex_search(line, m, insert_command)) {
-        process_insert_data(m[2].str(), table_index);
-    }
-    if (regex_search(line, m, select_command)) {
-        // checks if the select command is "SELECT *" ( npos means not found)
-        if (m[2].str().find(" *") != std::string::npos) {
-            print_table( tables[table_index] );
-        } else {
-            cout << "Select this" << endl;
-        }
-    }
-    if (regex_search(line, m, update_command)) {
-        cout << "Update this" << endl;
-    }
-    if (regex_search(line, m, delete_command)) {
-        process_delete_data(line, table_index);
-    }
-    if (regex_search(line, m, databases_command)) {
 
-        char full_path[FILENAME_MAX];    // saves the full path 
-        _fullpath(full_path, (current_database).c_str(), FILENAME_MAX);   // gets the full path of the current database
-                                                                          // _fullpath gets the full path of the current database
-                                                                          // first param is the variable to save the path
-                                                                          // second param is database to find
-                                                                          // third param is the max length of the path
-        string database_path = full_path;
-        cout << database_path << endl;
-        processed_command_outputs.push_back(database_path);
-    }
-    if (regex_search(line, m, tables_command)) {
-        for (const auto& table : tables) {
-            processed_command_outputs.push_back(get<string>(table[0]));
-            cout << get<string>(table[0]) << endl;
+    if (regex_search(line, m, regex(R"(CREATE\s+TABLE\s+(\w+)\s*\((.*)\);)"))) {
+        string table_name = m[1].str();
+        string columns_definition = m[2].str();
+
+        // Parse column definitions
+        Table table;
+        table.name = table_name;
+        regex column_regex(R"((\w+)\s+(INT|TEXT))");
+        auto begin = sregex_iterator(columns_definition.begin(), columns_definition.end(), column_regex);
+        auto end = sregex_iterator();
+        for (auto it = begin; it != end; ++it) {
+            table.columns.push_back({ (*it)[1].str(), (*it)[2].str() });
         }
+
+        // Save the table to file
+        save_table_to_file(table, current_database);
+        cout << "Table " << table_name << " created successfully.\n";
+    }
+
+    else if (regex_search(line, m, regex(R"(INSERT INTO\s+(\w+)\s*\((.*)\)\s+VALUES\s*\((.*)\);)"))) {
+        string table_name = m[1].str();
+        string column_list = m[2].str();
+        string values_list = m[3].str();
+
+        // Parse values
+        vector<string> values;
+        regex value_regex(R"('([^']*)'|([^,]+))");
+        auto begin = sregex_iterator(values_list.begin(), values_list.end(), value_regex);
+        auto end = sregex_iterator();
+        for (auto it = begin; it != end; ++it) {
+            values.push_back((*it)[1].matched ? (*it)[1].str() : (*it)[2].str());
+        }
+
+        // Simulate inserting data (can enhance to write directly to file)
+        Table table;
+        table.rows.push_back(values);
+        save_table_to_file(table, current_database);
+        cout << "Data inserted into table " << table_name << " successfully.\n";
     }
 }
 

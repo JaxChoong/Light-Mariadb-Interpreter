@@ -21,6 +21,7 @@
     #include <vector>
     #include <string>
     #include <filesystem>
+    #include <limits>
     #include "FileManip.h"
     #include "RegEx.h"
 
@@ -63,27 +64,27 @@
     string current_database;
 
     int main() {
-        // int choice;
-        // while (true) {
-        //     displayMenu();
-        //     cin >> choice;
-        //     switch (choice) {
-        //         case 1: createDatabase(choice); break;
-        //         case 2: dropDatabase(choice); break;
-        //         case 3: createTable(choice); break;
-        //         case 4:  dropTable(choice); break;
-        //         case 5: insertData(choice); break;
-        //         case 6: viewTableCSV(choice); break;
-        //         case 7: updateData(choice); break;
-        //         case 8: deleteData(choice); break;
-        //         case 9: countRows(choice); break;
-        //         case 10: return 0;
-        //         default: cout << "Invalid choice. Please try again." << endl;
-        //     }
-        // }
-        // set current path to current file directory
-        // vector<string> database_files = get_database_files();
-        // current_database = choose_database(database_files);
+        int choice;
+        while (true) {
+        displayMenu();
+        cin >> choice;
+        switch (choice) {
+                case 1: createDatabase(choice); break;
+                case 2: dropDatabase(choice); break;
+                case 3: createTable(choice); break;
+                case 4:  dropTable(choice); break;
+                case 5: insertData(choice); break;
+                case 6: viewTableCSV(choice); break;
+                case 7: updateData(choice); break;
+                case 8: deleteData(choice); break;
+                case 9: countRows(choice); break;
+                case 10: return 0;
+                default: cout << "Invalid choice. Please try again." << endl;
+            }
+        }
+        //set current path to current file directory
+        vector<string> database_files = get_database_files();
+        current_database = choose_database(database_files);
         current_database = "fileInput1.mdb";
         read_file(current_database);
         return 0;
@@ -107,275 +108,501 @@
     }
 
     void createDatabase() {
-    string dbName;
-    cout << "Enter the name of the new database: ";
-    cin >> dbName;
+        string dbName;
+        cout << "Enter the name of the new database: ";
+        cin >> dbName;
 
-    string dbPath = "../Data/" + dbName + ".mdb";
+        string dbPath = "../Data/" + dbName + ".mdb";
 
-    if (filesystem::exists(dbPath)) {
-        cout << "Database already exists!" << endl;
-        return;
-    }
+        if (filesystem::exists(dbPath)) {
+            cout << "Database already exists!" << endl;
+            return;
+        }
 
-    ofstream dbFile(dbPath);
-    if (dbFile) {
-        cout << "Database " << dbName << " created successfully." << endl;
-        dbFile.close();
-    } else {
-        cout << "Failed to create database." << endl;
-    }
+        ofstream dbFile(dbPath);
+        if (dbFile) {
+            cout << "Database " << dbName << " created successfully." << endl;
+            dbFile.close();
+        } else {
+            cout << "Failed to create database." << endl;
+        }
     }
 
     void viewDatabase() {
-     string databaseDirectory = "../Data";
+        string databaseDirectory = "../Data";
 
-    vector<string> databaseFiles = getDatabaseFiles(databaseDirectory);
+        vector<string> databaseFiles = getDatabaseFiles(databaseDirectory);
 
-    if (databaseFiles.empty()) {
-        cout << "No databases found." << endl;
-        return;
-    }
+        if (databaseFiles.empty()) {
+            cout << "No databases found." << endl;
+            return;
+        }
 
-    cout << "Available Databases:" << endl;
-    for (const auto& file : databaseFiles) {
-        cout << "- " << file << endl;
+        cout << "Available Databases:" << endl;
+        for (const auto& file : databaseFiles) {
+            cout << "- " << file << endl;
+        }
     }
 
     void createTable() {
-    string tableName;
-    int columnCount;
+        string tableName;
+        int columnCount;
 
-    cout << "Enter the name of the table: ";
-    cin >> tableName;
+        cout << "Enter the name of the table: ";
+        cin >> tableName;
 
-    cout << "Enter the number of columns: ";
-    cin >> columnCount;
+        cout << "Enter the number of columns (maximum 10): ";
+        while (!(cin >> columnCount) || columnCount <= 0 || columnCount > 10) {
+            cout << "Invalid number of columns. Please enter a positive integer up to 10: ";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
 
-    Table table;
-    table.name = tableName;
+        Table table;
+        table.name = tableName;
 
-    for (int i = 0; i < columnCount; ++i) {
-        Column column;
-        cout << "Enter name for column " << (i + 1) << ": ";
-        cin >> column.name;
-        cout << "Enter type for column " << (i + 1) << " (e.g., int, string): ";
-        cin >> column.type;
-        table.columns.push_back(column);
+        for (int i = 0; i < columnCount; ++i) {
+            Column column;
+            cout << "Enter name for column " << (i + 1) << ": ";
+            cin >> column.name;
+
+            cout << "Enter type for column " << (i + 1) << " (INT or TEXT): ";
+            while (true) {
+                cin >> column.type;
+                if (column.type == "INT" || column.type == "TEXT") break;
+                cout << "Invalid type. Only INT and TEXT are allowed. Try again: ";
+            }
+            table.columns.push_back(column);
+        }
+
+        // Save the table to the current database file
+        if (current_database.empty()) {
+            cout << "No database selected. Use 'CREATE DATABASE' first.\n";
+            return;
+        }
+
+        ofstream dbFile("../Data/" + current_database, ios::app);
+        if (!dbFile) {
+            cout << "Failed to open database file.\n";
+            return;
+        }
+
+        dbFile << "CREATE TABLE " << table.name << " (";
+        for (size_t i = 0; i < table.columns.size(); ++i) {
+            dbFile << table.columns[i].name << " " << table.columns[i].type;
+            if (i < table.columns.size() - 1) dbFile << ", ";
+        }
+        dbFile << ");\n";
+        dbFile.close();
+
+        cout << "Table " << tableName << " created successfully.\n";
     }
 
-    cout << "Table " << tableName << " with " << columnCount << " columns created successfully." << endl;
-    }
 
     void viewTable() {
-    string tableName;
-    cout << "Enter the name of the table to view: ";
-    cin >> tableName;
+        string tableName;
+        cout << "Enter the name of the table to view: ";
+        cin >> tableName;
 
-    // Example logic to simulate table content (replace with actual implementation)
-    Table table;
-    table.name = tableName;
-    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
-    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+        // Load table from database file
+        ifstream dbFile("../Data/" + current_database);
+        if (!dbFile) {
+            cout << "Failed to open database file.\n";
+            return;
+        }
 
-    // Display the table
-    cout << "Table: " << table.name << endl;
-    for (const auto& col : table.columns) {
-        cout << col.name << " (" << col.type << ")	";
-    }
-    cout << endl;
+        Table table;
+        bool tableFound = false;
+        string line;
 
-    for (const auto& row : table.rows) {
-        for (const auto& cell : row) {
-            cout << cell << "	";
+        while (getline(dbFile, line)) {
+            smatch m;
+            // Match table structure
+            if (regex_search(line, m, regex(R"(CREATE TABLE (\w+)\s*\((.*)\);)"))) {
+                if (m[1].str() == tableName) {
+                    tableFound = true;
+                    table.name = m[1].str();
+
+                    // Parse columns
+                    string columns_definition = m[2].str();
+                    regex column_regex(R"((\w+)\s+(INT|TEXT))");
+                    auto begin = sregex_iterator(columns_definition.begin(), columns_definition.end(), column_regex);
+                    auto end = sregex_iterator();
+                    for (auto it = begin; it != end; ++it) {
+                        table.columns.push_back({(*it)[1].str(), (*it)[2].str()});
+                    }
+                }
+            }
+            // Match table rows
+            else if (tableFound && regex_search(line, m, regex(R"(INSERT INTO \w+ VALUES \((.*)\);)"))) {
+                string values = m[1].str();
+                regex value_regex(R"('([^']*)')");
+                auto begin = sregex_iterator(values.begin(), values.end(), value_regex);
+                auto end = sregex_iterator();
+                vector<string> row;
+                for (auto it = begin; it != end; ++it) {
+                    row.push_back((*it)[1].str());
+                }
+                table.rows.push_back(row);
+            }
+        }
+        dbFile.close();
+
+        if (!tableFound) {
+            cout << "Table " << tableName << " not found.\n";
+            return;
+        }
+
+        // Display the table
+        cout << "Table: " << table.name << endl;
+        for (const auto& col : table.columns) {
+            cout << col.name << " (" << col.type << ") ";
         }
         cout << endl;
+
+        for (const auto& row : table.rows) {
+            for (const auto& cell : row) {
+                cout << cell << " ";
+            }
+            cout << endl;
+        }
     }
+
 
     void insertData() {
-    string tableName;
-    cout << "Enter the name of the table to insert data into: ";
-    cin >> tableName;
+        string tableName;
+        cout << "Enter the name of the table to insert data into: ";
+        cin >> tableName;
 
-    // Simulated table structure (replace with actual implementation)
-    Table table;
-    table.name = tableName;
-    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
+        // Simulated in-memory table structure (replace this with actual table lookup)
+        Table table;
+        table.name = tableName;
 
-    if (table.columns.empty()) {
-        cout << "Table does not exist or has no defined columns." << endl;
-        return;
+        // Load the table definition from the .mdb file
+        // Simulate column definition (replace this with actual file parsing logic)
+        table.columns = {{"ID", "INT"}, {"Name", "TEXT"}, {"Age", "INT"}};
+
+        if (table.columns.empty()) {
+            cout << "Table does not exist or has no defined columns.\n";
+            return;
+        }
+
+        vector<string> newRow;
+        for (const auto& column : table.columns) {
+            string value;
+            cout << "Enter value for " << column.name << " (" << column.type << "): ";
+            cin >> value;
+
+            // Validate data type
+            if (column.type == "INT" && !all_of(value.begin(), value.end(), ::isdigit)) {
+                cout << "Error: Value for " << column.name << " must be an integer.\n";
+                return;
+            }
+            newRow.push_back(value);
+        }
+
+        // Append to the database file
+        ofstream dbFile("../Data/" + current_database, ios::app);
+        if (!dbFile) {
+            cout << "Failed to open database file.\n";
+            return;
+        }
+
+        dbFile << "INSERT INTO " << table.name << " VALUES (";
+        for (size_t i = 0; i < newRow.size(); ++i) {
+            dbFile << "'" << newRow[i] << "'";
+            if (i < newRow.size() - 1) dbFile << ", ";
+        }
+        dbFile << ");\n";
+        dbFile.close();
+
+        cout << "Data inserted successfully into table " << table.name << ".\n";
     }
 
-    vector<string> newRow;
-    for (const auto& column : table.columns) {
-        string value;
-        cout << "Enter value for " << column.name << " (" << column.type << "): ";
-        cin >> value;
-        newRow.push_back(value);
-    }
-
-    table.rows.push_back(newRow);
-    cout << "Data inserted successfully into table " << table.name << "." << endl;
-}
-
-    ofstream dbFile(dbPath, ios::app);
-    if (!dbFile) {
-        cout << "Failed to open database." << endl;
-        return;
-    }
-
-    string data;
-    cout << "Enter the data to insert: ";
-    cin.ignore(); // Clear newline character from input buffer
-    getline(cin, data);
-
-    dbFile << data << endl;
-    cout << "Data inserted into database " << dbName << " successfully." << endl;
-    dbFile.close();
-    }
 
     void viewTableCSV() {
-    string tableName;
-    cout << "Enter the name of the table to view as CSV: ";
-    cin >> tableName;
+        string tableName;
+        cout << "Enter the name of the table to view as CSV: ";
+        cin >> tableName;
 
-    // Simulated table structure (replace with actual implementation)
-    Table table;
-    table.name = tableName;
-    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
-    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+        // Reuse `viewTable()` logic to load the table
+        Table table;
+        bool tableFound = false;
+        ifstream dbFile("../Data/" + current_database);
+        if (!dbFile) {
+            cout << "Failed to open database file.\n";
+            return;
+        }
 
-    if (table.rows.empty()) {
-        cout << "Table is empty or does not exist." << endl;
-        return;
-    }
+        string line;
+        while (getline(dbFile, line)) {
+            smatch m;
+            if (regex_search(line, m, regex(R"(CREATE TABLE (\w+)\s*\((.*)\);)"))) {
+                if (m[1].str() == tableName) {
+                    tableFound = true;
+                    table.name = m[1].str();
 
-    // Print table data as CSV
-    for (size_t i = 0; i < table.columns.size(); ++i) {
-        cout << table.columns[i].name;
-        if (i < table.columns.size() - 1) cout << ",";
-    }
-    cout << endl;
+                    string columns_definition = m[2].str();
+                    regex column_regex(R"((\w+)\s+(INT|TEXT))");
+                    auto begin = sregex_iterator(columns_definition.begin(), columns_definition.end(), column_regex);
+                    auto end = sregex_iterator();
+                    for (auto it = begin; it != end; ++it) {
+                        table.columns.push_back({(*it)[1].str(), (*it)[2].str()});
+                    }
+                }
+            } else if (tableFound && regex_search(line, m, regex(R"(INSERT INTO \w+ VALUES \((.*)\);)"))) {
+                string values = m[1].str();
+                regex value_regex(R"('([^']*)')");
+                auto begin = sregex_iterator(values.begin(), values.end(), value_regex);
+                auto end = sregex_iterator();
+                vector<string> row;
+                for (auto it = begin; it != end; ++it) {
+                    row.push_back((*it)[1].str());
+                }
+                table.rows.push_back(row);
+            }
+        }
+        dbFile.close();
 
-    for (const auto& row : table.rows) {
-        for (size_t i = 0; i < row.size(); ++i) {
-            cout << row[i];
-            if (i < row.size() - 1) cout << ",";
+        if (!tableFound) {
+            cout << "Table " << tableName << " not found.\n";
+            return;
+        }
+
+        // Print the table in CSV format
+        for (size_t i = 0; i < table.columns.size(); ++i) {
+            cout << table.columns[i].name;
+            if (i < table.columns.size() - 1) cout << ",";
         }
         cout << endl;
+
+        for (const auto& row : table.rows) {
+            for (size_t i = 0; i < row.size(); ++i) {
+                cout << row[i];
+                if (i < row.size() - 1) cout << ",";
+            }
+            cout << endl;
+        }
     }
+
 
 
     void updateData() {
-    string tableName;
-    cout << "Enter the name of the table to update data in: ";
-    cin >> tableName;
+        string tableName, columnName, newValue, conditionColumn, conditionValue;
 
-    // Simulated table structure (replace with actual implementation)
-    Table table;
-    table.name = tableName;
-    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
-    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
-
-    if (table.rows.empty()) {
-        cout << "Table is empty or does not exist." << endl;
-        return;
-    }
-
-    cout << "Current table data:" << endl;
-    for (size_t i = 0; i < table.rows.size(); ++i) {
-        cout << i + 1 << ". ";
-        for (const auto& cell : table.rows[i]) {
-            cout << cell << "	";
-        }
-        cout << endl;
-    }
-
-    size_t rowIndex;
-    cout << "Enter the row number to update: ";
-    cin >> rowIndex;
-
-    if (rowIndex < 1 || rowIndex > table.rows.size()) {
-        cout << "Invalid row number." << endl;
-        return;
-    }
-
-    vector<string>& rowToUpdate = table.rows[rowIndex - 1];
-    for (size_t i = 0; i < table.columns.size(); ++i) {
-        string newValue;
-        cout << "Enter new value for " << table.columns[i].name << " (" << table.columns[i].type << ") [Current: " << rowToUpdate[i] << "]: ";
+        cout << "Enter the table name: ";
+        cin >> tableName;
+        cout << "Enter the column name to update: ";
+        cin >> columnName;
+        cout << "Enter the new value: ";
         cin >> newValue;
-        rowToUpdate[i] = newValue;
+        cout << "Enter the condition column: ";
+        cin >> conditionColumn;
+        cout << "Enter the condition value: ";
+        cin >> conditionValue;
+
+        ifstream dbFile("../Data/" + current_database);
+        ofstream tempFile("../Data/temp.mdb");
+        if (!dbFile || !tempFile) {
+            cout << "Error opening files.\n";
+            return;
+        }
+
+        string line;
+        bool tableFound = false;
+        vector<string> columns;
+
+        while (getline(dbFile, line)) {
+            smatch m;
+            // Match and keep track of the table definition
+            if (regex_search(line, m, regex(R"(CREATE TABLE (\w+)\s*\((.*)\);)"))) {
+                tempFile << line << endl;
+                if (m[1].str() == tableName) {
+                    tableFound = true;
+
+                    // Extract column names
+                    string columns_definition = m[2].str();
+                    regex column_regex(R"((\w+)\s+(INT|TEXT))");
+                    auto begin = sregex_iterator(columns_definition.begin(), columns_definition.end(), column_regex);
+                    auto end = sregex_iterator();
+                    for (auto it = begin; it != end; ++it) {
+                        columns.push_back((*it)[1].str());
+                    }
+                }
+            } 
+            // Update matching rows
+            else if (tableFound && regex_search(line, m, regex(R"(INSERT INTO \w+ VALUES \((.*)\);)"))) {
+                string values = m[1].str();
+                regex value_regex(R"('([^']*)')");
+                auto begin = sregex_iterator(values.begin(), values.end(), value_regex);
+                auto end = sregex_iterator();
+
+                vector<string> row;
+                for (auto it = begin; it != end; ++it) {
+                    row.push_back((*it)[1].str());
+                }
+
+                // Update matching rows
+                auto conditionIndex = find(columns.begin(), columns.end(), conditionColumn);
+                auto updateIndex = find(columns.begin(), columns.end(), columnName);
+                if (conditionIndex != columns.end() && updateIndex != columns.end()) {
+                    size_t condIdx = distance(columns.begin(), conditionIndex);
+                    size_t updIdx = distance(columns.begin(), updateIndex);
+                    if (row[condIdx] == conditionValue) {
+                        row[updIdx] = newValue;
+                    }
+                }
+
+                // Write updated row
+                tempFile << "INSERT INTO " << tableName << " VALUES (";
+                for (size_t i = 0; i < row.size(); ++i) {
+                    tempFile << "'" << row[i] << "'";
+                    if (i < row.size() - 1) tempFile << ", ";
+                }
+                tempFile << ");\n";
+            } 
+            else {
+                tempFile << line << endl;
+            }
+        }
+
+        dbFile.close();
+        tempFile.close();
+
+        // Replace original file with updated file
+        remove(("../Data/" + current_database).c_str());
+        rename("../Data/temp.mdb", ("../Data/" + current_database).c_str());
+
+        cout << "Data updated successfully.\n";
     }
 
-    cout << "Row updated successfully." << endl;
-    }
+
+
 
     void deleteData() {
-`   string tableName;
-    cout << "Enter the name of the table to delete data from: ";
-    cin >> tableName;
+        string tableName, conditionColumn, conditionValue;
 
-    // Simulated table structure (replace with actual implementation)
-    Table table;
-    table.name = tableName;
-    table.columns = { {"ID", "int"}, {"Name", "string"}, {"Age", "int"} };
-    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+        cout << "Enter the table name: ";
+        cin >> tableName;
+        cout << "Enter the condition column: ";
+        cin >> conditionColumn;
+        cout << "Enter the condition value: ";
+        cin >> conditionValue;
 
-    if (table.rows.empty()) {
-        cout << "Table is empty or does not exist." << endl;
-        return;
-    }
-
-    cout << "Current table data:" << endl;
-    for (size_t i = 0; i < table.rows.size(); ++i) {
-        cout << i + 1 << ". ";
-        for (const auto& cell : table.rows[i]) {
-            cout << cell << "	";
+        ifstream dbFile("../Data/" + current_database);
+        ofstream tempFile("../Data/temp.mdb");
+        if (!dbFile || !tempFile) {
+            cout << "Error opening files.\n";
+            return;
         }
-        cout << endl;
+
+        string line;
+        bool tableFound = false;
+        vector<string> columns;
+
+        while (getline(dbFile, line)) {
+            smatch m;
+            // Match and keep track of the table definition
+            if (regex_search(line, m, regex(R"(CREATE TABLE (\w+)\s*\((.*)\);)"))) {
+                tempFile << line << endl;
+                if (m[1].str() == tableName) {
+                    tableFound = true;
+
+                    // Extract column names
+                    string columns_definition = m[2].str();
+                    regex column_regex(R"((\w+)\s+(INT|TEXT))");
+                    auto begin = sregex_iterator(columns_definition.begin(), columns_definition.end(), column_regex);
+                    auto end = sregex_iterator();
+                    for (auto it = begin; it != end; ++it) {
+                        columns.push_back((*it)[1].str());
+                    }
+                }
+            } 
+            // Write only rows that do not match the condition
+            else if (tableFound && regex_search(line, m, regex(R"(INSERT INTO \w+ VALUES \((.*)\);)"))) {
+                string values = m[1].str();
+                regex value_regex(R"('([^']*)')");
+                auto begin = sregex_iterator(values.begin(), values.end(), value_regex);
+                auto end = sregex_iterator();
+
+                vector<string> row;
+                for (auto it = begin; it != end; ++it) {
+                    row.push_back((*it)[1].str());
+                }
+
+                // Check condition
+                auto conditionIndex = find(columns.begin(), columns.end(), conditionColumn);
+                if (conditionIndex != columns.end()) {
+                    size_t condIdx = distance(columns.begin(), conditionIndex);
+                    if (row[condIdx] != conditionValue) {
+                        tempFile << line << endl;
+                    }
+                }
+            } 
+            else {
+                tempFile << line << endl;
+            }
+        }
+
+        dbFile.close();
+        tempFile.close();
+
+        // Replace original file with updated file
+        remove(("../Data/" + current_database).c_str());
+        rename("../Data/temp.mdb", ("../Data/" + current_database).c_str());
+
+        cout << "Row(s) deleted successfully.\n";
     }
 
-    size_t rowIndex;
-    cout << "Enter the row number to delete: ";
-    cin >> rowIndex;
-
-    if (rowIndex < 1 || rowIndex > table.rows.size()) {
-        cout << "Invalid row number." << endl;
-        return;
-    }
-
-    table.rows.erase(table.rows.begin() + rowIndex - 1);
-    cout << "Row deleted successfully." << endl;
-    }
 
     void countRows() {
-    string tableName;
-    cout << "Enter the name of the table to count rows in: ";
-    cin >> tableName;
+        string tableName;
+        cout << "Enter the name of the table to count rows in: ";
+        cin >> tableName;
 
-    // Simulated table structure (replace with actual implementation)
-    Table table;
-    table.name = tableName;
-    table.rows = { {"1", "Alice", "25"}, {"2", "Bob", "30"}, {"3", "Charlie", "35"} };
+        ifstream dbFile("../Data/" + current_database);
+        if (!dbFile) {
+            cout << "Failed to open database file.\n";
+            return;
+        }
 
-    cout << "The table " << tableName << " has " << table.rows.size() << " rows." << endl;
+        string line;
+        size_t rowCount = 0;
+        bool tableFound = false;
+
+        while (getline(dbFile, line)) {
+            smatch m;
+            if (regex_search(line, m, regex(R"(CREATE TABLE (\w+)\s*\((.*)\);)"))) {
+                tableFound = (m[1].str() == tableName);
+            } 
+            else if (tableFound && regex_search(line, m, regex(R"(INSERT INTO \w+ VALUES \((.*)\);)"))) {
+                rowCount++;
+            }
+        }
+
+        dbFile.close();
+
+        if (!tableFound) {
+            cout << "Table " << tableName << " not found.\n";
+        } else {
+            cout << "The table " << tableName << " has " << rowCount << " rows.\n";
+        }
     }
 
-    vector<string> get_database_files() {
-        vector<string> database_files;
-        filesystem::current_path(filesystem::path(__FILE__).parent_path());
-        for (const auto& entry : filesystem::directory_iterator("../Data")) {
-            database_files.push_back(entry.path().filename().string());
-        }
-        cout << "Databases found:" << endl;
-        int i = 0;
-        for (const auto& file : database_files) {
-            cout << "- "<< file << " ( Select with " << to_string(i) << " )"<< endl;
-            i++;
-        }
-        return database_files;
+
+        vector<string> get_database_files() {
+            vector<string> database_files;
+            filesystem::current_path(filesystem::path(__FILE__).parent_path());
+            for (const auto& entry : filesystem::directory_iterator("../Data")) {
+                database_files.push_back(entry.path().filename().string());
+            }
+            cout << "Databases found:" << endl;
+            int i = 0;
+            for (const auto& file : database_files) {
+                cout << "- "<< file << " ( Select with " << to_string(i) << " )"<< endl;
+                i++;
+            }
+            return database_files;
     }
 
     string choose_database( vector<string> database_files) {
