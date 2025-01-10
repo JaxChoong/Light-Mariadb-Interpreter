@@ -26,6 +26,7 @@
     #include "RegEx.h"
 
     using namespace std;
+    namespace fs = std::filesystem;
 
     struct Column {
         string name;
@@ -87,6 +88,27 @@
         current_database = choose_database(database_files);
         current_database = "fileInput1.mdb";
         read_file(current_database);
+        return 0;
+
+        try {
+            // Get the path of the current executable
+            fs::path currentFilePath = fs::current_path();
+
+            // Ensure the "Data" folder exists in the expected location
+            fs::path dataPath = currentFilePath / "Data";
+            if (!fs::exists(dataPath)) {
+                cout << "Error: Data folder not found at " << dataPath << endl;
+                return 1;
+            }
+
+            // Change to the "Data" folder
+            fs::current_path(dataPath);
+            cout << "Current working directory set to: " << fs::current_path() << endl;
+        } catch (const fs::filesystem_error& e) {
+            cerr << "Filesystem error: " << e.what() << endl;
+            return 1;
+        }
+
         return 0;
     }
 
