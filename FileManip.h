@@ -49,21 +49,6 @@ void write_to_file(const vector<variant<string, vector<string>>>& lines) {
     }
 }
 
-// Function to get the output filename
-string get_output_filename(const string& filename) {
-
-    size_t lastindex = filename.find_last_of(".");     // gets position of the . character
-    string name_without_extension = filename.substr(0, lastindex);    // gets the filename without the extension ( .mdb)
-    cout << name_without_extension << endl;
-    size_t pos = name_without_extension.find("Input");  // gets the position of the "Input" string as substring
-    
-    if (pos != string::npos) 
-    {
-        name_without_extension.replace(pos, 5, "Output");     // if found, replace "Input" with "Output"
-    }
-
-    return name_without_extension + ".txt";
-}
 
 // Function to read a file
 void read_file(const string& filename) {
