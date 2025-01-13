@@ -14,7 +14,6 @@ TABLES;
 UPDATE customer SET customer_email='email333' WHERE customer_id=3; 
 SELECT * FROM customer;
 
-SELECT COUNT(*) FROM customer;
 DELETE FROM customer WHERE customer_id=4; 
 SELECT * FROM customer;
 

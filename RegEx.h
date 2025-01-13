@@ -18,6 +18,7 @@ void process_insert_data(const string& insert_command, int table_index);
 void process_delete_data(const string& delete_command, int table_index);
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
 void write_to_file(const vector<string>& lines, const std::string& output_filename); 
+void process_update_data(const string& update_command, int table_index);
 
 // global variables
 int table_index = -1;
@@ -110,7 +111,8 @@ void process_line(const string& line, string current_database) {
 
     if (regex_search(line, m, update_command)) 
     {
-        cout << "Update this" << endl;
+        // if update command is found, update the data
+        process_update_data(line, table_index);
     }
 
     if (regex_search(line, m, delete_command)) 
@@ -357,6 +359,87 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
     }
     processed_command_outputs.push_back(lines);
 }
+
+
+void process_update_data(const string& update_command, int table_index) {
+    smatch m;
+    regex get_update_data(R"(UPDATE\s+(\w+)\s+SET\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
+
+    if (regex_search(update_command, m, get_update_data)) {
+        string table_name = m[1].str();
+        string column_to_update = m[2].str();
+        string new_value = m[3].str();
+        string condition = m[4].str();
+        string condition_value = m[5].str();
+
+        string error_type;
+        string error_condition;
+
+        int update_value_column_index = -1;
+        int condition_column_index = -1;
+       
+        vector<variant<int,string>>table_headers = get<vector<variant<int,string>>>(tables[table_index][1]);
+        for (int i = 0; i < table_headers.size(); i++) {
+            if (get<string>(table_headers[i]) == column_to_update) {
+                update_value_column_index = i;
+            }
+            if (get<string>(table_headers[i]) == condition) {
+                condition_column_index = i;
+            }
+        }
+
+        if (update_value_column_index == -1 || condition_column_index == -1) {
+            error_type = "Error: Column ";
+            if (update_value_column_index == -1) {
+                error_condition = column_to_update;
+            }
+            else {
+                error_condition = condition;
+            } 
+            cout << error_type << error_condition << " not found." << endl;
+            processed_command_outputs.push_back(error_type + error_condition + " not found.");
+            return;
+        }
+
+        bool found = false;
+        for (int i = 2; i < tables[table_index].size(); i++) {
+            auto& row = get<vector<variant<int, string>>>(tables[table_index][i]);
+            if (holds_alternative<string>(row[condition_column_index])) {
+                if (get<string>(row[condition_column_index]) == condition_value) {
+                    if (holds_alternative<string>(row[update_value_column_index])) {
+                        row[update_value_column_index] = new_value;
+                    }
+                    else if (holds_alternative<int>(row[update_value_column_index])) {
+                        row[update_value_column_index] = stoi(new_value);
+                    }
+                    found = true;
+                }
+            }
+            else if (holds_alternative<int>(row[condition_column_index])) {
+                if (to_string(get<int>(row[condition_column_index])) == condition_value) {
+                    if (holds_alternative<string>(row[update_value_column_index])) {
+                        row[update_value_column_index] = new_value;
+                    }
+                    else if (holds_alternative<int>(row[update_value_column_index])) {
+                        row[update_value_column_index] = stoi(new_value);
+                    }
+                    found = true;
+                }
+            }
+        }
+        if (!found)
+        {
+            error_type = "Error: Condition ";
+            error_condition = condition_value;
+            cout << error_type << error_condition << " not found."  << endl;
+            processed_command_outputs.push_back(error_type + error_condition + " not found.");
+        }
+    } else {
+        cout << "Error: Invalid UPDATE statement." << endl;
+        processed_command_outputs.push_back("Error: Invalid UPDATE statement.");
+    }
+}
+
 
 
 #endif
