@@ -101,7 +101,10 @@ void process_line(const string& line, string current_database) {
             // if command is 'SELECT *', print the table
             print_table( tables[table_index] );
         } else {
-            cout << "Select this" << endl;
+            // if command is SELECT COUNT(*), print the count of the table
+            int count = tables[table_index].size() - 2;     // minus 2 to remove header and column names in [0] and [1]
+            cout << "Count: " << count << endl;
+            processed_command_outputs.push_back("Count: " + to_string(count));
         }
     }
 
