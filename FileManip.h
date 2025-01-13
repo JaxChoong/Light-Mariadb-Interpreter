@@ -14,7 +14,7 @@ using namespace std;
 
 // Function prototypes
 void write_to_file(const vector<string>& lines, const std::string& output_filename);
-string output_filename;
+extern string output_filename; // output filename
 extern vector<variant<string,vector<string>>> processed_command_outputs;   // use this to store lines to write to file, "extern" allows variable to be used in other files
 
 // Function to write to a file
@@ -70,7 +70,6 @@ void read_file(const string& filename) {
 
     filesystem::current_path(filesystem::path(__FILE__).parent_path());
     const string file_path = filename;
-    output_filename = get_output_filename(filename);
     fstream file(file_path);
 
     if (file.is_open()) 

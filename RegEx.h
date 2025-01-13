@@ -24,6 +24,7 @@ void process_update_data(const string& update_command, int table_index);
 int table_index = -1;
 vector<vector<variant<string, vector<variant<int, string>>>>> tables;    // 2d table vector
 vector<variant<string, vector<string>>> processed_command_outputs;      // vector to store processed lines, to output to file
+string output_filename; // declare output_filename
 
 // Function to process CREATE commands
 vector<string> get_create_type(const string& create_command) {
@@ -56,11 +57,9 @@ vector<string> get_create_type(const string& create_command) {
         return {"table_name", table_name};
     } 
     else if (regex_search(create_command, m, output_file_command)) 
-    {
-        // detects if the command is to create an output file
-        // this function is now useless since our output is in filemanip.h lol
-        string output_file_name = m[1].str() + ".txt";    
-        return {"output_file_name", output_file_name};
+    {  
+        output_filename = m.str();  // set the output filename to the output file name  
+        return {"output_file_name", "lol"};
     }
     return {};
 }

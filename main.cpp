@@ -32,7 +32,7 @@ string choose_database(vector<string> database_files); // Allows user to choose 
 void read_file(const string& filename); // Reads the specified file
 
 int main() {
-    string current_database = "fileInput2.mdb"; // Currently you can only fixate the database file here
+    string current_database = "fileInput1.mdb"; // Currently you can only fixate the database file here
     read_file(current_database); // Read file (main program loop)
     return 0;
 }
