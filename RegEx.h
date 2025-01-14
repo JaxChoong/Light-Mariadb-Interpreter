@@ -13,17 +13,16 @@
 using namespace std;
 
 // Function prototypes
-void process_table_data(const string& create_command, int table_index);
-void process_insert_data(const string& insert_command, int table_index);
-void process_delete_data(const string& delete_command, int table_index);
+void process_table_data(const string& create_command);
+void process_insert_data(const string& insert_command);
+void process_delete_data(const string& delete_command);
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
 void write_to_file(const vector<string>& lines, const std::string& output_filename); 
-void process_update_data(const string& update_command, int table_index);
+void process_update_data(const string& update_command);
 void add_table_headers(const vector<string>& table_headers);
 
 // global variables
-int table_index = -1;
-vector<vector<variant<string, vector<variant<int, string>>>>> tables;    // 2d table vector
+vector<variant<string, vector<variant<int, string>>>> tables;    // 2d table vector
 vector<variant<string, vector<string>>> processed_command_outputs;      // vector to store processed lines, to output to file
 string output_filename; // declare output_filename
 
@@ -37,23 +36,8 @@ vector<string> get_create_type(const string& create_command) {
     {
         string table_name = m[1].str();
 
-        // Find or add the table name in the tables vector
-        for (size_t i = 0; i < tables.size(); i++) 
-        {
-            if (get<string>(tables[i][0]) == table_name) 
-            {
-                table_index = i;
-                break;
-            }
-        }
 
-        if (table_index == -1) 
-        { // if table name is not found
-            tables.push_back({table_name}); // Add the table name as the first entry
-                                            // the {} creates a vector
-            table_index = tables.size() - 1;
-        }
-
+        tables.push_back(table_name); // Add the table name as the first entry
         return {"table_name", table_name};
     } 
     else if (regex_search(create_command, m, output_file_command)) 
@@ -95,7 +79,7 @@ string process_line(const string& line, string current_database) {
     if (regex_search(line, m, insert_command)) 
     {
         // if insert command is found, process the insert data
-        process_insert_data(m[2].str(), table_index);
+        process_insert_data(m[2].str());
     }
 
     if (regex_search(line, m, select_command)) 
@@ -103,10 +87,10 @@ string process_line(const string& line, string current_database) {
         // checks if the select command is "SELECT *" ( npos means not found)
         if (m[2].str().find(" *") != std::string::npos) {
             // if command is 'SELECT *', print the table
-            print_table( tables[table_index] );
+            print_table( tables );
         } else {
             // if command is SELECT COUNT(*), print the count of the table
-            int count = tables[table_index].size() - 2;     // minus 2 to remove header and column names in [0] and [1]
+            int count = tables.size() - 2;     // minus 2 to remove header and column names in [0] and [1]
             cout << count << endl;
             processed_command_outputs.push_back("Count: " + to_string(count));
         }
@@ -115,13 +99,13 @@ string process_line(const string& line, string current_database) {
     if (regex_search(line, m, update_command)) 
     {
         // if update command is found, update the data
-        process_update_data(line, table_index);
+        process_update_data(line);
     }
 
     if (regex_search(line, m, delete_command)) 
     {
         // if delete command is found, process the delete data
-        process_delete_data(line, table_index);
+        process_delete_data(line);
     }
     if (regex_search(line, m, databases_command)) {
 
@@ -139,18 +123,14 @@ string process_line(const string& line, string current_database) {
     if (regex_search(line, m, tables_command)) 
     {
         // if the command is to show the tables, print the table names
-        for (const auto& table : tables) 
-        {
-            //  go through each of the tables and print the table name in the first index
-            processed_command_outputs.push_back(get<string>(table[0]));
-            cout << get<string>(table[0]) << endl;
-        }
+        processed_command_outputs.push_back(get<string>(tables[0]));
+        cout << get<string>(tables[0]) << endl;
     }
     return "";
 }
 
 // Function to processes CREATE commands
-void process_table_data(const string& create_command, int table_index) {
+void process_table_data(const string& create_command) {
 
     smatch m;
     regex get_table_data(R"(\((.*)$)"); // Matches everything after '('
@@ -173,14 +153,8 @@ void process_table_data(const string& create_command, int table_index) {
             table_headers.push_back((*it)[1].str());
         }
 
-        // Ensure the table index is initialized
-        while (tables.size() <= table_index) 
-        {
-            tables.emplace_back(); // Add empty vectors for missing indices
-        }
-
         // Add headers to the table
-        tables[table_index].push_back(table_headers);
+        tables.push_back(table_headers);
 
     } 
     else 
@@ -191,7 +165,7 @@ void process_table_data(const string& create_command, int table_index) {
 }
 
 // Function to process INSERT commands
-void process_insert_data(const string& insert_command, int table_index) {
+void process_insert_data(const string& insert_command) {
 
     smatch m;
     // Regex to capture everything inside VALUES(...)
@@ -234,14 +208,8 @@ void process_insert_data(const string& insert_command, int table_index) {
         }
         cout << endl;
 
-        // Ensure the table index is initialized
-        while (tables.size() <= table_index) 
-        {
-            tables.emplace_back(); // Add empty vectors for missing indices
-        }
-
             // Add data to the table
-            tables[table_index].push_back(table_data);
+            tables.push_back(table_data);
 
         } catch (const runtime_error& error) {
             processed_command_outputs.push_back(error.what());
@@ -255,7 +223,7 @@ void process_insert_data(const string& insert_command, int table_index) {
 }
 
 // Function to process DELETE commands
-void process_delete_data (const string& delete_command, int table_index) {
+void process_delete_data (const string& delete_command) {
 
     smatch m;
     regex get_delete_data(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
@@ -266,15 +234,7 @@ void process_delete_data (const string& delete_command, int table_index) {
         string condition = m[2].str();
         string value = m[3].str();
         
-        if (table_index == -1) 
-        {
-            cout << "No table selected" << endl;
-            processed_command_outputs.push_back("No table selected");
-            return;
-        }
-
-        auto& table = tables[table_index];
-        auto& headers = get<vector<variant<int, string>>>(table[1]);
+        auto& headers = get<vector<variant<int, string>>>(tables[1]);
 
         // Find the index of the column to delete from
         int column_index = -1;
@@ -295,16 +255,16 @@ void process_delete_data (const string& delete_command, int table_index) {
             return;
         }
 
-        size_t initial_size = table.size();
-        for (size_t i = table.size() - 1; i > 0; --i) 
+        size_t initial_size = tables.size();
+        for (size_t i = tables.size() - 1; i > 0; --i) 
         { // Start from the last row and move up
-            const auto& row = get<vector<variant<int, string>>>(table[i]);
+            const auto& row = get<vector<variant<int, string>>>(tables[i]);
             // if the row is a string, and the value is the same as the value to delete
             if (holds_alternative<string>(row[column_index])) 
             {
                 if (get<string>(row[column_index]) == value) 
                 {
-                    table.erase(table.begin() + i); // Remove the row
+                    tables.erase(tables.begin() + i); // Remove the row
                 }
             } 
             // if the row is an integer, and the value is the same as the value to delete
@@ -312,7 +272,7 @@ void process_delete_data (const string& delete_command, int table_index) {
             {
                 if (to_string(get<int>(row[column_index])) == value) 
                 {
-                    table.erase(table.begin() + i); // Remove the row
+                    tables.erase(tables.begin() + i); // Remove the row
                 }
             }
         }
@@ -365,7 +325,7 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
 }
 
 
-void process_update_data(const string& update_command, int table_index) {
+void process_update_data(const string& update_command) {
     smatch m;
     regex get_update_data(R"(UPDATE\s+(\w+)\s+SET\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
 
@@ -382,7 +342,7 @@ void process_update_data(const string& update_command, int table_index) {
         int update_value_column_index = -1;
         int condition_column_index = -1;
        
-        vector<variant<int,string>>table_headers = get<vector<variant<int,string>>>(tables[table_index][1]);
+        vector<variant<int,string>>table_headers = get<vector<variant<int,string>>>(tables[1]);
         for (int i = 0; i < table_headers.size(); i++) {
             if (get<string>(table_headers[i]) == column_to_update) {
                 update_value_column_index = i;
@@ -406,8 +366,8 @@ void process_update_data(const string& update_command, int table_index) {
         }
 
         bool found = false;
-        for (int i = 2; i < tables[table_index].size(); i++) {
-            auto& row = get<vector<variant<int, string>>>(tables[table_index][i]);
+        for (int i = 2; i < tables.size(); i++) {
+            auto& row = get<vector<variant<int, string>>>(tables[i]);
             if (holds_alternative<string>(row[condition_column_index])) {
                 if (get<string>(row[condition_column_index]) == condition_value) {
                     if (holds_alternative<string>(row[update_value_column_index])) {
@@ -449,7 +409,7 @@ void add_table_headers(const vector<string>& table_headers) {
     for (const auto& header : table_headers) {
         headers.push_back(header);
     }
-    tables[table_index].push_back(headers);
+    tables.push_back(headers);
 }
 
 #endif

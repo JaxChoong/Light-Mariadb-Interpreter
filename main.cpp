@@ -23,7 +23,7 @@
 using namespace std;
 
 int main() {
-    string current_database = "fileInput2.mdb"; // Currently you can only fixate the database file here
+    string current_database = "fileInput1.mdb"; // Currently you can only fixate the database file here
     read_file(current_database); // Read file (main program loop)
     return 0;
 }
