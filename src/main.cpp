@@ -1,4 +1,4 @@
-    // *****************************************************************************************
+// *****************************************************************************************
     // Course: CCP6114 Programming Fundamentals
     // Lecture Class: TC3L
     // Tutorial Class : TT5L
@@ -12,7 +12,7 @@
     // Member_1 : FileRead.h, main.cpp, RegEx.h
     // Member_2 : main.cpp, RegEx.h
     // Member_3 : RegEx.h
-    // Member_4 :
+    // Member_4 :main.cpp, RegEx.h
 
     // *****************************************************************************************
 
@@ -20,10 +20,10 @@
     #include <fstream>
     #include <vector>
     #include <string>
-    #include <experimental/filesystem>
     #include <limits>
     #include "FileManip.h"
     #include "RegEx.h"
+    #include <filesystem>
 
     using namespace std;
     namespace fs = std::experimental::filesystem;
@@ -456,7 +456,7 @@
                         columns.push_back((*it)[1].str());
                     }
                 }
-            } 
+            }
             // Update matching rows
             else if (tableFound && regex_search(line, m, regex(R"(INSERT INTO \w+ VALUES \((.*)\);)"))) {
                 string values = m[1].str();
@@ -487,7 +487,7 @@
                     if (i < row.size() - 1) tempFile << ", ";
                 }
                 tempFile << ");\n";
-            } 
+            }
             else {
                 tempFile << line << endl;
             }
@@ -544,7 +544,7 @@
                         columns.push_back((*it)[1].str());
                     }
                 }
-            } 
+            }
             // Write only rows that do not match the condition
             else if (tableFound && regex_search(line, m, regex(R"(INSERT INTO \w+ VALUES \((.*)\);)"))) {
                 string values = m[1].str();
@@ -565,7 +565,7 @@
                         tempFile << line << endl;
                     }
                 }
-            } 
+            }
             else {
                 tempFile << line << endl;
             }
@@ -601,7 +601,7 @@
             smatch m;
             if (regex_search(line, m, regex(R"(CREATE TABLE (\w+)\s*\((.*)\);)"))) {
                 tableFound = (m[1].str() == tableName);
-            } 
+            }
             else if (tableFound && regex_search(line, m, regex(R"(INSERT INTO \w+ VALUES \((.*)\);)"))) {
                 rowCount++;
             }

@@ -1,4 +1,4 @@
- #ifndef FILEREAD_H
+#ifndef FILEREAD_H
 #define FILEREAD_H
 
 #include <string>

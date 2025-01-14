@@ -7,255 +7,231 @@
 #include <iostream>
 #include <variant>
 #include "FileManip.h"
-#include <variant>
-#include <type_traits>
 
 using namespace std;
-vector<vector<variant<string, vector<variant<int, string>>>>> tables;
+
+// Function prototypes
 void process_table_data(const string& create_command, int table_index);
-vector<vector<variant<string, vector<variant<int, string>>>>> tables;
 void process_insert_data(const string& insert_command, int table_index);
-void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
+void process_delete_data(const string& delete_command, int table_index);
+void process_update_data(const string& update_command, int table_index);
+void print_table(const vector<variant<string, int>>& table);
+void write_to_file(const vector<string>& lines, const std::string& output_filename);
+
+// Global variables
 int table_index = -1;
-vector<variant<string, vector<string>>> processed_command_outputs;
-void write_to_file(const vector<string>& lines, const std::string& output_filename); 
-vector<variant<string, vector<string>>> processed_command_outputs;
+vector<vector<variant<string, int>>> tables;
+vector<string> processed_command_outputs;
 
-
+// Function to process CREATE commands
 vector<string> get_create_type(const string& create_command) {
-    regex database_command(R"(DATABASE\s+(\w+))");
     regex table_command(R"(TABLE\s+(\w+)\s*\()");
-    smatch m;
+    regex output_file_command(R"((.*).txt)");
 
     smatch m;
-    if (regex_search(create_command, m, database_command)) {
-        // detects if the command is to create a database
-        cout << "Create database" << endl;
-        string database_name = m[1].str();
-        return {"database_name", database_name};
-    } 
-    else if (regex_search(create_command, m, table_command)) {
+    if (regex_search(create_command, m, table_command)) {
         string table_name = m[1].str();
-
-            if (get<string>(tables[i][0]) == table_name) {
         for (size_t i = 0; i < tables.size(); i++) {
             if (get<string>(tables[i][0]) == table_name) {
                 table_index = i;
                 break;
             }
         }
-
-        if (table_index == -1) { // if table name is not found
-            tables.push_back({table_name}); // Add the table name as the first entry
+        if (table_index == -1) {
+            tables.push_back({table_name});
             table_index = tables.size() - 1;
         }
-
-        process_table_data(create_command, table_index); 
+        process_table_data(create_command, table_index);
         return {"table_name", table_name};
-    } 
-    else if (regex_search(create_command, m, output_file_command)) {
-        // detects if the command is to create an output file
-        string output_file_name = m[1].str() + ".txt";    // for now no actual output file creation, just for demonstration
+    } else if (regex_search(create_command, m, output_file_command)) {
+        string output_file_name = m[1].str() + ".txt";
         return {"output_file_name", output_file_name};
     }
     return {};
 }
 
-void process_line(const string& line, string current_database) {
+// Function to process each line
+void process_line(const string& line, const string& current_database) {
     regex create_command(R"(CREATE\s+(.*))");
-    regex drop_command("(DROP)(.*)");
-    regex insert_command("(INSERT)(.*)");
-    regex select_command("(SELECT)(.*)");
-    regex update_command("(UPDATE)(.*)");
-    regex delete_command("(DELETE)(.*)");
-    regex databases_command("(DATABASES;)");
-    regex tables_command("(TABLES;)");
+    regex insert_command(R"(INSERT\s+INTO\s+(\w+)\s*\((.*)\)\s+VALUES\s*\((.*)\);)");
+    regex select_command(R"(SELECT\s+\*\s+FROM\s+(\w+);)");
+    regex update_command(R"(UPDATE\s+(\w+)\s+SET\s+(\w+)\s*=\s*(['"].*?['"])\s+WHERE\s+(\w+)\s*=\s*(['"].*?['"]);)");
+    regex delete_command(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*(['"].*?['"]);)");
+    regex databases_command(R"(DATABASES;)");
+    regex tables_command(R"(TABLES;)");
 
     smatch m;
-
-    if (regex_search(line, m, regex(R"(CREATE\s+TABLE\s+(\w+)\s*\((.*)\);)"))) {
-        string table_name = m[1].str();
-        string columns_definition = m[2].str();
-
-        // Parse column definitions
-        Table table;
-        auto begin = sregex_iterator(columns_definition.begin(), columns_definition.end(), column_regex);
-        auto end = sregex_iterator();
-        for (auto it = begin; it != end; ++it) {
-        auto end = sregex_iterator();
-        for (auto it = begin; it != end; ++it) {
-            table.columns.push_back({ (*it)[1].str(), (*it)[2].str() });
+    if (regex_search(line, m, create_command)) {
+        vector<string> create_type_vector = get_create_type(m[1].str());
+        if (create_type_vector.empty()) {
+            cout << "Error: Couldn't find create types." << endl;
         }
-        save_table_to_file(table, current_database);
-        // Save the table to file
-        save_table_to_file(table, current_database);
-        cout << "Table " << table_name << " created successfully.\n";
     }
-
-    else if (regex_search(line, m, regex(R"(INSERT INTO\s+(\w+)\s*\((.*)\)\s+VALUES\s*\((.*)\);)"))) {
-        string table_name = m[1].str();
-        string column_list = m[2].str();
-        string values_list = m[3].str();
-
-        // Parse values
-        auto begin = sregex_iterator(values_list.begin(), values_list.end(), value_regex);
-        regex value_regex(R"('([^']*)'|([^,]+))");
-        auto begin = sregex_iterator(values_list.begin(), values_list.end(), value_regex);
-        auto end = sregex_iterator();
-        for (auto it = begin; it != end; ++it) {
-            values.push_back((*it)[1].matched ? (*it)[1].str() : (*it)[2].str());
+    if (regex_search(line, m, insert_command)) {
+        process_insert_data(m[0].str(), table_index);
+    }
+    if (regex_search(line, m, select_command)) {
+        print_table(tables[table_index]);
+    }
+    if (regex_search(line, m, update_command)) {
+        process_update_data(m[0].str(), table_index);
+    }
+    if (regex_search(line, m, delete_command)) {
+        process_delete_data(m[0].str(), table_index);
+    }
+    if (regex_search(line, m, databases_command)) {
+        char full_path[FILENAME_MAX];
+        _fullpath(full_path, (current_database).c_str(), FILENAME_MAX);
+        string database_path = full_path;
+        cout << database_path << endl;
+        processed_command_outputs.push_back(database_path);
+    }
+    if (regex_search(line, m, tables_command)) {
+        for (const auto& table : tables) {
+            processed_command_outputs.push_back(get<string>(table[0]));
+            cout << get<string>(table[0]) << endl;
         }
-
-        // Simulate inserting data (can enhance to write directly to file)
-        Table table;
-        table.rows.push_back(values);
-        save_table_to_file(table, current_database);
-        cout << "Data inserted into table " << table_name << " successfully.\n";
     }
 }
 
+// Function to process CREATE TABLE commands
 void process_table_data(const string& create_command, int table_index) {
     smatch m;
-    regex get_table_data(R"(\((.*)$)"); // Matches everything after '('
-
+    regex get_table_data(R"(\((.*)\))");
     if (regex_search(create_command, m, get_table_data)) {
         string table_data = m[1].str();
-
-        // Extract individual columns
-        regex column_regex(R"((\w+)\s+(\w+))");  // seperates the column name and the column type by a space
+        regex column_regex(R"((\w+)\s+(\w+))");
         auto begin = sregex_iterator(table_data.begin(), table_data.end(), column_regex);
-        vector<variant<int, string>> table_headers;
-
-        vector<variant<int, string>> table_headers;
-
+        auto end = sregex_iterator();
+        vector<variant<string, int>> table_headers;
         for (auto it = begin; it != end; ++it) {
-            table_headers.push_back((*it)[1].str()); // Add column name
+            table_headers.push_back((*it)[1].str());
         }
-
-        // Ensure the table index is initialized
         while (tables.size() <= table_index) {
-            tables.emplace_back(); // Add empty vectors for missing indices
+            tables.emplace_back();
         }
-
-        // Add headers to the table
         tables[table_index].push_back(table_headers);
-
     } else {
         cout << "No table data found" << endl;
     }
 }
 
+// Function to process INSERT commands
 void process_insert_data(const string& insert_command, int table_index) {
     smatch m;
-
-    // Regex to capture everything inside VALUES(...)
     regex get_insert_data(R"(VALUES\s*\((.*)\))");
-
     if (regex_search(insert_command, m, get_insert_data)) {
-        string insert_data = m[1].str(); // Captures the values inside VALUES(...)
-
-        // Split the captured string into individual values
+        string insert_data = m[1].str();
         regex value_regex(R"('([^']*)'|([^,]+))");
         auto begin = sregex_iterator(insert_data.begin(), insert_data.end(), value_regex);
-        vector<variant<int, string>> table_data;
-
-        vector<variant<int, string>> table_data;
-
+        auto end = sregex_iterator();
+        vector<variant<string, int>> table_data;
         for (auto it = begin; it != end; ++it) {
             string value = (*it)[1].matched ? (*it)[1].str() : (*it)[2].str();
-            // Check if the value is an integer or a string
             if (!value.empty() && all_of(value.begin(), value.end(), ::isdigit)) {
-                table_data.push_back(stoi(value)); // Add as integer
+                table_data.push_back(stoi(value));
             } else {
-                table_data.push_back(value); // Add as string
+                table_data.push_back(value);
             }
         }
-        cout << endl;
-
-        // Ensure the table index is initialized
         while (tables.size() <= table_index) {
-            tables.emplace_back(); // Add empty vectors for missing indices
+            tables.emplace_back();
         }
-
-        // Add data to the table
         tables[table_index].push_back(table_data);
-
     } else {
         cout << "No insert data found" << endl;
     }
 }
 
-void process_delete_data (const string& Delete, int table_index) {
+// Function to process UPDATE commands
+void process_update_data(const string& update_command, int table_index) {
     smatch m;
-    regex get_delete_data(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
-    cout << Delete << endl;
-
-    if (regex_search(Delete, m, get_delete_data)) {
-        string table_name = m[1].str();
-        string condition = m[2].str();
-        string value = m[3].str();
-        
-        if (table_index == -1) {
-            cout << "No table selected" << endl;
-            return;
-        }
-        auto& headers = get<vector<variant<int, string>>>(table[1]);
+    regex get_update_data(R"(SET\s+(\w+)\s*=\s*(['"].*?['"])\s+WHERE\s+(\w+)\s*=\s*(['"].*?['"]))");
+    if (regex_search(update_command, m, get_update_data)) {
+        string column_name = m[1].str();
+        string new_value = m[2].str();
+        string condition_column = m[3].str();
+        string condition_value = m[4].str();
         auto& table = tables[table_index];
-        auto& headers = get<vector<variant<int, string>>>(table[1]);
-
-        // Find the index of the column to delete from
+        auto& headers = get<vector<variant<string, int>>>(table[1]);
         int column_index = -1;
-            if (get<string>(headers[i]) == condition) {
+        int condition_index = -1;
         for (size_t i = 0; i < headers.size(); i++) {
-            if (get<string>(headers[i]) == condition) {
+            if (get<string>(headers[i]) == column_name) {
                 column_index = i;
-                break;
+            }
+            if (get<string>(headers[i]) == condition_column) {
+                condition_index = i;
             }
         }
-
-        if (column_index == -1) {
+        if (column_index == -1 || condition_index == -1) {
             cout << "Column not found" << endl;
             return;
         }
-
-            const auto& row = get<vector<variant<int, string>>>(table[i]);
-            if (holds_alternative<string>(row[column_index])) {
-                if (get<string>(row[column_index]) == value) {
-            if (holds_alternative<string>(row[column_index])) {
-                if (get<string>(row[column_index]) == value) {
-            } else if (holds_alternative<int>(row[column_index])) {
-                if (to_string(get<int>(row[column_index])) == value) {
-            } else if (holds_alternative<int>(row[column_index])) {
-                if (to_string(get<int>(row[column_index])) == value) {
-                    table.erase(table.begin() + i); // Remove the row
+        for (size_t i = 1; i < table.size(); ++i) {
+            auto& row = get<vector<variant<string, int>>>(table[i]);
+            if ((holds_alternative<string>(row[condition_index]) && get<string>(row[condition_index]) == condition_value) ||
+                (holds_alternative<int>(row[condition_index]) && to_string(get<int>(row[condition_index])) == condition_value)) {
+                if (holds_alternative<string>(row[column_index])) {
+                    row[column_index] = new_value;
+                } else if (holds_alternative<int>(row[column_index])) {
+                    row[column_index] = stoi(new_value);
                 }
             }
         }
+    } else {
+        cout << "Invalid UPDATE statement." << endl;
+    }
+}
 
-        size_t deleted_rows = initial_size - table.size();
+// Function to process DELETE commands
+void process_delete_data(const string& delete_command, int table_index) {
+    smatch m;
+    regex get_delete_data(R"(WHERE\s+(\w+)\s*=\s*(['"].*?['"]));");
+    if (regex_search(delete_command, m, get_delete_data)) {
+        string condition_column = m[1].str();
+        string condition_value = m[2].str();
+        auto& table = tables[table_index];
+        auto& headers = get<vector<variant<string, int>>>(table[1]);
+        int condition_index = -1;
+        for (size_t i = 0; i < headers.size(); i++) {
+            if (get<string>(headers[i]) == condition_column) {
+                condition_index = i;
+                break;
+            }
+        }
+        if (condition_index == -1) {
+            cout << "Column not found" << endl;
+            return;
+        }
+        for (size_t i = table.size() - 1; i > 0; --i) {
+            auto& row = get<vector<variant<string, int>>>(table[i]);
+            if ((holds_alternative<string>(row[condition_index]) && get<string>(row[condition_index]) == condition_value) ||
+                (holds_alternative<int>(row[condition_index]) && to_string(get<int>(row[condition_index])) == condition_value)) {
+                table.erase(table.begin() + i);
+            }
+        }
     } else {
         cout << "Invalid DELETE statement." << endl;
     }
-void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
+}
 
-void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
-    vector<string> lines;    // saves the table's lines
-
+// Function to print the table
+void print_table(const vector<variant<string, int>>& table) {
+    vector<string> lines;
     for (size_t i = 1; i < table.size(); i++) {
-        // Get the row as a vector of integers or strings
-        const auto& row = get<vector<variant<int, string>>>(table[i]);
-        string line;  // String to store the current row
-            if (holds_alternative<string>(cell)) { // if cell is a string, then get it as string
+        const auto& row = get<vector<variant<string, int>>>(table[i]);
+        string line;
+        for (const auto& cell : row) {
+            if (holds_alternative<string>(cell)) {
                 cout << get<string>(cell);
                 line += get<string>(cell);
-                cout << get<string>(cell);
-                cout << get<int>(cell);   // if cell is an integer, then get it as integer
-                line += to_string(get<int>(cell));
-                cout << get<int>(cell);   // if cell is an integer, then get it as integer
+            } else {
+                cout << get<int>(cell);
                 line += to_string(get<int>(cell));
             }
-            if (&cell != &row.back()) {   // compare the address of the cell with the address of the last cell in the row
-                cout << ", "; // Print separator if cell is not the last one
+            if (&cell != &row.back()) {
+                cout << ", ";
                 line += ", ";
             }
         }
