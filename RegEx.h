@@ -16,6 +16,7 @@ using namespace std;
 void process_table_data(const string& create_command, int table_index);
 void process_insert_data(const string& insert_command, int table_index);
 void process_delete_data(const string& delete_command, int table_index);
+void process_update_data(const string& update_command, int table_index);
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
 void write_to_file(const vector<string>& lines, const std::string& output_filename); 
 
@@ -107,7 +108,7 @@ void process_line(const string& line, string current_database) {
 
     if (regex_search(line, m, update_command)) 
     {
-        cout << "Update this" << endl;
+        process_update_data(line, table_index);
     }
 
     if (regex_search(line, m, delete_command)) 
@@ -354,6 +355,75 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
     }
     processed_command_outputs.push_back(lines);
 }
+
+void process_update_data(const string& update_command, int table_index) {
+    smatch m;
+    regex update_command_pattern(R"(UPDATE\s+\w+\s+SET\s+([^WHERE]+)\s+WHERE\s+(.+))");
+
+    if (regex_search(update_command, m, update_command_pattern)) {
+        string set_clause = m[1].str();
+        string condition = m[2].str();
+
+        if (table_index < 0 || table_index >= tables.size()) {
+            cout << "Error: Invalid table index." << endl;
+            return;
+        }
+
+        auto& table = tables[table_index];
+        auto& headers = get<vector<variant<int, string>>>(table[1]);
+
+        // Parse the set clause
+        regex set_clause_pattern(R"((\w+)\s*=\s*'([^']*)')");
+        auto set_begin = sregex_iterator(set_clause.begin(), set_clause.end(), set_clause_pattern);
+        auto set_end = sregex_iterator();
+
+        vector<pair<string, string>> updates;
+        for (auto it = set_begin; it != set_end; ++it) {
+            string column = (*it)[1].str();
+            string new_value = (*it)[2].str();
+            updates.push_back({column, new_value});
+        }
+
+        // Apply updates to rows matching the condition
+        regex condition_pattern(R"((\w+)\s*=\s*'([^']*)')");
+        smatch condition_match;
+        if (regex_search(condition, condition_match, condition_pattern)) {
+            string condition_column = condition_match[1].str();
+            string condition_value = condition_match[2].str();
+
+            int column_index = -1;
+            for (size_t i = 0; i < headers.size(); ++i) {
+                if (get<string>(headers[i]) == condition_column) {
+                    column_index = i;
+                    break;
+                }
+            }
+
+            if (column_index == -1) {
+                cout << "Column " << condition_column << " not found." << endl;
+                return;
+            }
+
+            // Update rows matching the condition
+            for (size_t i = 2; i < table.size(); ++i) {
+                auto& row = get<vector<variant<int, string>>>(table[i]);
+                if (get<string>(row[column_index]) == condition_value) {
+                    for (const auto& update : updates) {
+                        for (size_t j = 0; j < headers.size(); ++j) {
+                            if (get<string>(headers[j]) == update.first) {
+                                row[j] = update.second;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        cout << "Error: Invalid UPDATE command." << endl;
+    }
+}
+
 
 
 #endif
