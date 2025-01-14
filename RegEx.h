@@ -19,6 +19,7 @@ void process_delete_data(const string& delete_command, int table_index);
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
 void write_to_file(const vector<string>& lines, const std::string& output_filename); 
 void process_update_data(const string& update_command, int table_index);
+void add_table_headers(const vector<string>& table_headers);
 
 // global variables
 int table_index = -1;
@@ -53,7 +54,6 @@ vector<string> get_create_type(const string& create_command) {
             table_index = tables.size() - 1;
         }
 
-        process_table_data(create_command, table_index);  // process the table data
         return {"table_name", table_name};
     } 
     else if (regex_search(create_command, m, output_file_command)) 
@@ -65,7 +65,7 @@ vector<string> get_create_type(const string& create_command) {
 }
 
 // Function to processes each line what to do with it
-void process_line(const string& line, string current_database) {
+string process_line(const string& line, string current_database) {
 
     // regex to match the different commands
     regex create_command(R"(CREATE\s+(.*))");
@@ -86,6 +86,10 @@ void process_line(const string& line, string current_database) {
             processed_command_outputs.push_back("Error: Couldn't find create types.");
             cout << "Error: Couldn't find create types." << endl;
         }
+        else if (create_type_vector[0] == "table_name") 
+        {
+            return "table created";
+        }
     }
 
     if (regex_search(line, m, insert_command)) 
@@ -103,7 +107,7 @@ void process_line(const string& line, string current_database) {
         } else {
             // if command is SELECT COUNT(*), print the count of the table
             int count = tables[table_index].size() - 2;     // minus 2 to remove header and column names in [0] and [1]
-            cout << "Count: " << count << endl;
+            cout << count << endl;
             processed_command_outputs.push_back("Count: " + to_string(count));
         }
     }
@@ -142,6 +146,7 @@ void process_line(const string& line, string current_database) {
             cout << get<string>(table[0]) << endl;
         }
     }
+    return "";
 }
 
 // Function to processes CREATE commands
@@ -439,6 +444,12 @@ void process_update_data(const string& update_command, int table_index) {
     }
 }
 
-
+void add_table_headers(const vector<string>& table_headers) {
+    vector<variant<int, string>> headers;
+    for (const auto& header : table_headers) {
+        headers.push_back(header);
+    }
+    tables[table_index].push_back(headers);
+}
 
 #endif

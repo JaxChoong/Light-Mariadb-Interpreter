@@ -1,4 +1,4 @@
- #ifndef FILEREAD_H
+#ifndef FILEREAD_H
 #define FILEREAD_H
 
 // include necessary libraries
@@ -9,6 +9,8 @@
 #include "RegEx.h"
 #include <variant>
 #include <vector>
+#include <regex>
+#include <string>
 
 using namespace std;
 
@@ -52,29 +54,56 @@ void write_to_file(const vector<variant<string, vector<string>>>& lines) {
 
 // Function to read a file
 void read_file(const string& filename) {
-
     filesystem::current_path(filesystem::path(__FILE__).parent_path());
     const string file_path = filename;
     fstream file(file_path);
 
     if (file.is_open()) 
     {
+        string status;
         string line;
+        vector<string> table_headers; // To store column names
+        bool in_create_table_block = false; // Flag for CREATE TABLE block
+        regex column_regex(R"((\w+)\s+\w+)"); // Matches column definitions like 'column_name TYPE'
+
         while (getline(file, line)) 
         {
             if (!line.empty()) 
             {
-                // Add line to processed_command_outputs as a single string
-                processed_command_outputs.push_back("> " + line);
-                cout << "> " << line << endl;            
-                // Process the command and handle any multi-line output internally
-                process_line(line, filename);
-            }
-            else{
+                // Process the line
+                if (!in_create_table_block) {
+                    processed_command_outputs.push_back("> " + line);
+                    cout << "> " << line << endl;
+                    status = process_line(line, filename);
+
+                    // Add the line to processed_command_outputs
+                    // If "table created" is returned, start extracting columns
+                    if (status == "table created") {
+                        in_create_table_block = true;
+                    }
+                } 
+                else {
+                    // Extract columns while in CREATE TABLE block
+                    cout << line << endl;
+                    processed_command_outputs.push_back(line);
+                    smatch match;
+                    if (regex_search(line, match, column_regex)) {
+                        table_headers.push_back(match[1].str()); // Add column name to headers
+                    }
+
+                    // Check for end of CREATE TABLE block
+                    if (line.find(");") != string::npos) {
+                        in_create_table_block = false;
+
+                        // Add the table headers to the tables vector
+                        add_table_headers(table_headers);
+                    }
+                }
+            } 
+            else {
                 processed_command_outputs.push_back(line);
                 cout << line << endl;
             }
-
         }
         file.close();
 
@@ -87,6 +116,7 @@ void read_file(const string& filename) {
         cout << "File not found" << endl;
     }
 }
+
 
 
 #endif // FILEREAD_H
