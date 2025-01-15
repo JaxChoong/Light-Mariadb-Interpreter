@@ -9,4 +9,6 @@ INSERT INTO customer(customer_id,customer_name,customer_city,customer_state,cust
 INSERT INTO customer(customer_id,customer_name,customer_city,customer_state,customer_country,custom er_phone,customer_email) VALUES (3,'name3','city3','state3','country3','phone3','email3'); 
 INSERT INTO customer(customer_id,customer_name,customer_city,customer_state,customer_country,custom er_phone,customer_email) VALUES ();
 
+UPDATE customer SET customer_name = 'new_name1' WHERE customer_id = '1';
 SELECT * FROM customer;
+
