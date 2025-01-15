@@ -21,3 +21,6 @@ SELECT COUNT(*) FROM customer;
 
 UPDATE customer SET customer_name = 'new_name1' WHERE customer_id = 1;
 SELECT * FROM customer;
+
+UPDATE customer SET customer_name = 'Jack' WHERE customer_id = 1;
+SELECT * FROM customer;

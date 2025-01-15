@@ -356,43 +356,49 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
     processed_command_outputs.push_back(lines);
 }
 
+// Function to process the UPDATE SQL-like command and update the table data
 void process_update_data(const string& update_command, int table_index) {
     smatch m;
+    // Regex to match the structure of the UPDATE command
     regex update_command_pattern(R"(UPDATE\s+\w+\s+SET\s+([^WHERE]+)\s+WHERE\s+(.+))");
 
+    // Check if the command matches the UPDATE pattern
     if (regex_search(update_command, m, update_command_pattern)) {
-        string set_clause = m[1].str();
-        string condition = m[2].str();
+        string set_clause = m[1].str();  // Extract the SET clause
+        string condition = m[2].str();   // Extract the WHERE condition
 
+        // Ensure the table index is valid
         if (table_index < 0 || table_index >= tables.size()) {
             cout << "Error: Invalid table index." << endl;
             return;
         }
 
-        auto& table = tables[table_index];
-        auto& headers = get<vector<variant<int, string>>>(table[1]);
+        auto& table = tables[table_index];  // Reference to the table to be updated
+        auto& headers = get<vector<variant<int, string>>>(table[1]);  // Get the table headers (column names)
 
-        // Parse the SET clause
+        // Regex to match column=value pairs in the SET clause
         regex set_clause_pattern(R"((\w+)\s*=\s*'([^']*)')");
         auto set_begin = sregex_iterator(set_clause.begin(), set_clause.end(), set_clause_pattern);
         auto set_end = sregex_iterator();
 
+        // Store column updates as pairs of column names and new values
         vector<pair<string, string>> updates;
         for (auto it = set_begin; it != set_end; ++it) {
-            string column = (*it)[1].str();
-            string new_value = (*it)[2].str();
-            updates.push_back({column, new_value});
+            string column = (*it)[1].str();   // Extract the column name
+            string new_value = (*it)[2].str(); // Extract the new value
+            updates.push_back({column, new_value});  // Store the update
         }
 
-        // Parse the WHERE condition
+        // Regex to match the column and value in the WHERE condition
         regex condition_pattern(R"((\w+)\s*=\s*'?(\d+)'?)");
         smatch condition_match;
         if (regex_search(condition, condition_match, condition_pattern)) {
-            string condition_column = condition_match[1].str();
-            string condition_value = condition_match[2].str();
-            int condition_value_int = std::stoi(condition_value); // Convert to integer
+            string condition_column = condition_match[1].str();   // Extract the column name for the condition
+            string condition_value = condition_match[2].str();    // Extract the condition value
+            int condition_value_int = std::stoi(condition_value); // Convert the value to an integer
 
-            int column_index = -1;
+            int column_index = -1;  // Index of the condition column in the headers
+            // Find the index of the condition column
             for (size_t i = 0; i < headers.size(); ++i) {
                 if (get<string>(headers[i]) == condition_column) {
                     column_index = i;
@@ -400,16 +406,19 @@ void process_update_data(const string& update_command, int table_index) {
                 }
             }
 
+            // If the condition column is not found, print an error
             if (column_index == -1) {
                 cout << "Column " << condition_column << " not found." << endl;
                 return;
             }
 
-            // Update rows matching the condition
+            // Iterate over the table rows to apply updates to matching rows
             for (size_t i = 2; i < table.size(); ++i) {
                 auto& row = get<vector<variant<int, string>>>(table[i]);
+                // Check if the condition column value matches the condition
                 if (std::holds_alternative<int>(row[column_index]) &&
                     std::get<int>(row[column_index]) == condition_value_int) {
+                    // Print the row before updating for debugging
                     cout << "Updating row: ";
                     for (const auto& cell : row) {
                         if (std::holds_alternative<int>(cell)) {
@@ -420,10 +429,11 @@ void process_update_data(const string& update_command, int table_index) {
                     }
                     cout << endl;
 
+                    // Apply updates to the row
                     for (const auto& update : updates) {
                         for (size_t j = 0; j < headers.size(); ++j) {
                             if (get<string>(headers[j]) == update.first) {
-                                row[j] = update.second;
+                                row[j] = update.second;  // Update the column value
                                 cout << "Updated column " << update.first << " to " << update.second << endl;
                                 break;
                             }
@@ -432,12 +442,13 @@ void process_update_data(const string& update_command, int table_index) {
                 }
             }
         } else {
-            cout << "Error: Invalid WHERE condition." << endl;
+            cout << "Error: Invalid WHERE condition." << endl;  // Print error if condition is invalid
         }
     } else {
-        cout << "Error: Invalid UPDATE command." << endl;
+        cout << "Error: Invalid UPDATE command." << endl;  // Print error if the command does not match the pattern
     }
 }
+
 
 
 

@@ -41,3 +41,10 @@ customer_id, customer_name, customer_city, customer_state, customer_country, cus
 1, new_name1, city1, state1, country1, phone1, email1
 2, name2, city2, state2, country2, phone2, email2
 3, name3, city3, state3, country3, phone3, email333
+
+> UPDATE customer SET customer_name = 'Jack' WHERE customer_id = 1;
+> SELECT * FROM customer;
+customer_id, customer_name, customer_city, customer_state, customer_country, customer_phone, customer_email
+1, Jack, city1, state1, country1, phone1, email1
+2, name2, city2, state2, country2, phone2, email2
+3, name3, city3, state3, country3, phone3, email333
