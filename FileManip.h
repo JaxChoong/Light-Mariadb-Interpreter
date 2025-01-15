@@ -15,41 +15,10 @@
 using namespace std;
 
 // Function prototypes
-void write_to_file(const vector<string>& lines, const std::string& output_filename);
+void write_to_file(const vector<variant<string, vector<string>>>& lines);
 extern string output_filename; // output filename
 extern vector<variant<string,vector<string>>> processed_command_outputs;   // use this to store lines to write to file, "extern" allows variable to be used in other files
 
-// Function to write to a file
-void write_to_file(const vector<variant<string, vector<string>>>& lines) {
-
-    const string output_path = output_filename;
-    ofstream output_file(output_path);
-
-    if (output_file.is_open()) 
-    {
-        for (const auto& line : lines) 
-        {
-            if (holds_alternative<string>(line)) 
-            {
-                // Write single-line string
-                output_file << get<string>(line) << endl;
-            } 
-            else if (holds_alternative<vector<string>>(line)) 
-            {
-                // Write each subline in the vector
-                for (const auto& subline : get<vector<string>>(line)) 
-                {
-                    output_file << subline << endl;
-                }
-            }
-        }
-        output_file.close();
-    } 
-    else 
-    {
-        cout << "Could not open file for writing: " << output_path << endl;
-    }
-}
 
 
 // Function to read a file
@@ -120,6 +89,39 @@ void read_file(const string& filename) {
     }
 }
 
+
+
+// Function to write to a file
+void write_to_file(const vector<variant<string, vector<string>>>& lines) {
+
+    const string output_path = output_filename;
+    ofstream output_file(output_path);
+
+    if (output_file.is_open()) 
+    {
+        for (const auto& line : lines) 
+        {
+            if (holds_alternative<string>(line)) 
+            {
+                // Write single-line string
+                output_file << get<string>(line) << endl;
+            } 
+            else if (holds_alternative<vector<string>>(line)) 
+            {
+                // Write each subline in the vector
+                for (const auto& subline : get<vector<string>>(line)) 
+                {
+                    output_file << subline << endl;
+                }
+            }
+        }
+        output_file.close();
+    } 
+    else 
+    {
+        cout << "Could not open file for writing: " << output_path << endl;
+    }
+}
 
 
 #endif // FILEREAD_H
