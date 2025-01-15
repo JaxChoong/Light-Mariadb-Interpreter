@@ -54,6 +54,7 @@ void write_to_file(const vector<variant<string, vector<string>>>& lines) {
 
 // Function to read a file
 void read_file(const string& filename) {
+    // get the current path to the directory
     filesystem::current_path(filesystem::path(__FILE__).parent_path());
     const string file_path = filename;
     fstream file(file_path);
@@ -72,6 +73,7 @@ void read_file(const string& filename) {
             {
                 // Process the line
                 if (!in_create_table_block) {
+                    // if not in CREATE TABLE block, then add a ">" to the line
                     processed_command_outputs.push_back("> " + line);
                     cout << "> " << line << endl;
                     status = process_line(line, filename);
@@ -93,6 +95,7 @@ void read_file(const string& filename) {
 
                     // Check for end of CREATE TABLE block
                     if (line.find(");") != string::npos) {
+                        // if end of the coloumn def, then set it to false and quit this loop
                         in_create_table_block = false;
 
                         // Add the table headers to the tables vector

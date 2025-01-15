@@ -287,7 +287,8 @@ void process_delete_data (const string& delete_command) {
 
 
 // Function to print the table (to the console and save into vector to be written)
-void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
+void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) 
+{
     vector<string> lines;    // saves the table's lines
 
     for (size_t i = 1; i < table.size(); i++) 
@@ -325,7 +326,8 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
 }
 
 
-void process_update_data(const string& update_command) {
+void process_update_data(const string& update_command) 
+{
     smatch m;
     regex get_update_data(R"(UPDATE\s+(\w+)\s+SET\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
 
@@ -404,7 +406,8 @@ void process_update_data(const string& update_command) {
     }
 }
 
-void add_table_headers(const vector<string>& table_headers) {
+void add_table_headers(const vector<string>& table_headers) 
+{
     vector<variant<int, string>> headers;
     for (const auto& header : table_headers) {
         headers.push_back(header);
