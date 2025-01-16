@@ -13,40 +13,22 @@
 using namespace std;
 
 // Function prototypes
-void process_table_data(const string& create_command);
+void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
+void add_table_headers(const vector<string>& table_headers);
+string process_line(const string& line, string current_database);
+vector<string> get_create_type(const string& create_command);
 void process_insert_data(const string& insert_command);
 void process_delete_data(const string& delete_command);
-void print_table(const vector<variant<string, vector<variant<int, string>>>>& table);
-void write_to_file(const vector<string>& lines, const std::string& output_filename); 
 void process_update_data(const string& update_command);
-void add_table_headers(const vector<string>& table_headers);
+void write_to_file(const vector<string>& lines, const std::string& output_filename); 
+
 
 // global variables
 vector<variant<string, vector<variant<int, string>>>> tables;    // 2d table vector
 vector<variant<string, vector<string>>> processed_command_outputs;      // vector to store processed lines, to output to file
-string output_filename; // declare output_filename
-
-// Function to process CREATE commands
-vector<string> get_create_type(const string& create_command) {
-    regex table_command(R"(TABLE\s+(\w+)\s*\()");
-    regex output_file_command(R"((.*).txt)");
-
-    smatch m; 
-    if (regex_search(create_command, m, table_command)) 
-    {
-        string table_name = m[1].str();
+string output_filename;
 
 
-        tables.push_back(table_name); // Add the table name as the first entry
-        return {"table_name", table_name};
-    } 
-    else if (regex_search(create_command, m, output_file_command)) 
-    {  
-        output_filename = m.str();  // set the output filename to the output file name  
-        return {"output_file_name", "lol"};
-    }
-    return {};
-}
 
 // Function to processes each line what to do with it
 string process_line(const string& line, string current_database) {
@@ -82,6 +64,7 @@ string process_line(const string& line, string current_database) {
         process_insert_data(m[2].str());
     }
 
+    // This is basically the SELECT function
     if (regex_search(line, m, select_command)) 
     {
         // checks if the select command is "SELECT *" ( npos means not found)
@@ -129,39 +112,28 @@ string process_line(const string& line, string current_database) {
     return "";
 }
 
-// Function to processes CREATE commands
-void process_table_data(const string& create_command) {
 
-    smatch m;
-    regex get_table_data(R"(\((.*)$)"); // Matches everything after '('
 
-    if (regex_search(create_command, m, get_table_data)) 
+// Function to process CREATE commands
+vector<string> get_create_type(const string& create_command) {
+    regex table_command(R"(TABLE\s+(\w+)\s*\()");
+    regex output_file_command(R"((.*).txt)");
+
+    smatch m; 
+    if (regex_search(create_command, m, table_command)) 
     {
-        string table_data = m[1].str();
+        string table_name = m[1].str();
 
-        // Extract individual columns
-        regex column_regex(R"((\w+)\s+(\w+))");  // seperates the column name and the column type by a space
-        auto begin = sregex_iterator(table_data.begin(), table_data.end(), column_regex);  //tells the iterator to start at the beginning of the string, and match the regex
-        auto end = sregex_iterator();   // tells the iterator to end at the end of the string
 
-        vector<variant<int, string>> table_headers;
-
-        // start iterator(it) in the beginning, and while its not at the end, increment iterator
-        for (auto it = begin; it != end; ++it) 
-        {
-            // add the column name to the table headers
-            table_headers.push_back((*it)[1].str());
-        }
-
-        // Add headers to the table
-        tables.push_back(table_headers);
-
+        tables.push_back(table_name); // Add the table name as the first entry
+        return {"table_name", table_name};
     } 
-    else 
-    {
-        processed_command_outputs.push_back("No table data found");
-        cout << "No table data found" << endl;
+    else if (regex_search(create_command, m, output_file_command)) 
+    {  
+        output_filename = m.str();  // set the output filename to the output file name  
+        return {"output_file_name", "lol"};
     }
+    return {};
 }
 
 // Function to process INSERT commands
@@ -199,11 +171,11 @@ void process_insert_data(const string& insert_command) {
             // Check if the value is an integer or a string
             if (!value.empty() && all_of(value.begin(), value.end(), ::isdigit)) 
             {
-                table_data.push_back(stoi(value)); // Add as integer
+                table_data.push_back(stoi(value));
             } 
             else 
             {
-                table_data.push_back(value); // Add as string
+                table_data.push_back(value);
             }
         }
         cout << endl;
@@ -221,6 +193,122 @@ void process_insert_data(const string& insert_command) {
         cout << "Error: No insert data found." << endl;
     }
 }
+
+
+// Function to process UPDATE commands
+void process_update_data(const string& update_command) 
+{
+    smatch m;
+    // Regex to parse the basic structure of the UPDATE command
+    regex update_pattern(R"(UPDATE\s+(\w+)\s+SET\s+([^WHERE]+)\s+WHERE\s+(.+))");
+
+    if (regex_search(update_command, m, update_pattern)) {
+        string table_name = m[1].str();     // Extract the table name
+        string set_clause = m[2].str();    // Extract the SET clause
+        string condition = m[3].str();    // Extract the WHERE clause
+
+        // Validate the table exists
+        if (tables.empty() || tables.size() < 2) {
+            cout << "Error: Table data is invalid or missing." << endl;
+            processed_command_outputs.push_back("Error: Table data is invalid or missing.");
+            return;
+        }
+        
+        // GET TABLE HEADERS
+        vector<variant<int, string>> table_headers = get<vector<variant<int, string>>>(tables[1]);
+
+        // Parse the SET clause into column-value pairs
+        regex set_clause_pattern(R"((\w+)\s*=\s*['\"]?([^,'\"]+)['\"]?)");
+        // sets iterator to the start of set_clause and tell it where the end of set_clause is, and match it to set_clause_pattern
+        auto set_begin = sregex_iterator(set_clause.begin(), set_clause.end(), set_clause_pattern);
+        // sets iterator to the end of set_clause ( this is done automatically)
+        auto set_end = sregex_iterator();
+
+        vector<pair<int, string>> updates;  // Store column indices and new values for updates
+        for (auto it = set_begin; it != set_end; ++it) {
+            string column = (*it)[1].str();
+            string new_value = (*it)[2].str();
+            int column_index = -1;
+
+            // Find the column index
+            for (int i = 0; i < table_headers.size(); ++i) {
+                if (get<string>(table_headers[i]) == column) {
+                    column_index = i;
+                    break;
+                }
+            }
+
+            if (column_index == -1) {
+                cout << "Error: Column " << column << " not found." << endl;
+                processed_command_outputs.push_back("Error: Column " + column + " not found.");
+                return;
+            }
+            // add the column index and the new value to the updates vector
+            updates.push_back({column_index, new_value});
+        }
+
+        // Parse the WHERE clause
+        regex condition_pattern(R"((\w+)\s*=\s*['\"]?(\w+)['\"]?)");
+        smatch condition_match;
+        if (!regex_search(condition, condition_match, condition_pattern)) {
+            cout << "Error: Invalid WHERE clause." << endl;
+            processed_command_outputs.push_back("Error: Invalid WHERE clause.");
+            return;
+        }
+
+        string condition_column = condition_match[1].str();
+        string condition_value = condition_match[2].str();
+        int condition_index = -1;
+
+        // Find the condition column index
+        for (int i = 0; i < table_headers.size(); ++i) {
+            if (get<string>(table_headers[i]) == condition_column) {
+                condition_index = i;
+                break;
+            }
+        }
+
+        if (condition_index == -1) {
+            cout << "Error: Condition column " << condition_column << " not found." << endl;
+            processed_command_outputs.push_back("Error: Condition column " + condition_column + " not found.");
+            return;
+        }
+
+        // Apply updates to rows matching the condition
+        bool found = false;
+        for (size_t i = 2; i < tables.size(); ++i) {
+            // get the current row
+            auto& row = get<vector<variant<int, string>>>(tables[i]);
+
+            // Match the condition
+            if ((holds_alternative<string>(row[condition_index]) &&                // if current row is a string AND
+                 get<string>(row[condition_index]) == condition_value) ||          // the value of the row is the same as the condition value OR
+                (holds_alternative<int>(row[condition_index]) &&                   // if current row is an integer AND
+                 to_string(get<int>(row[condition_index])) == condition_value)) {  // the value of the row is the same as the condition value
+                
+                // Apply updates
+                for (const auto& [col_index, new_value] : updates) {
+                    if (holds_alternative<string>(row[col_index])) {
+                        row[col_index] = new_value;
+                    } else if (holds_alternative<int>(row[col_index])) {
+                        row[col_index] = stoi(new_value);
+                    }
+                }
+                found = true;
+            }
+        }
+
+        if (!found) {
+            cout << "Error: No rows match the condition." << endl;
+            processed_command_outputs.push_back("Error: No rows match the condition.");
+        }
+    } else {
+        cout << "Error: Invalid UPDATE command." << endl;
+        processed_command_outputs.push_back("Error: Invalid UPDATE command.");
+    }
+}
+
+
 
 // Function to process DELETE commands
 void process_delete_data (const string& delete_command) {
@@ -287,9 +375,9 @@ void process_delete_data (const string& delete_command) {
 
 
 // Function to print the table (to the console and save into vector to be written)
-void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) {
+void print_table(const vector<variant<string, vector<variant<int, string>>>>& table) 
+{
     vector<string> lines;    // saves the table's lines
-
     for (size_t i = 1; i < table.size(); i++) 
     {
 
@@ -325,86 +413,10 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
 }
 
 
-void process_update_data(const string& update_command) {
-    smatch m;
-    regex get_update_data(R"(UPDATE\s+(\w+)\s+SET\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?\s+WHERE\s+(\w+)\s*=\s*['\"]?(\w+)['\"]?)");
 
-    if (regex_search(update_command, m, get_update_data)) {
-        string table_name = m[1].str();
-        string column_to_update = m[2].str();
-        string new_value = m[3].str();
-        string condition = m[4].str();
-        string condition_value = m[5].str();
-
-        string error_type;
-        string error_condition;
-
-        int update_value_column_index = -1;
-        int condition_column_index = -1;
-       
-        vector<variant<int,string>>table_headers = get<vector<variant<int,string>>>(tables[1]);
-        for (int i = 0; i < table_headers.size(); i++) {
-            if (get<string>(table_headers[i]) == column_to_update) {
-                update_value_column_index = i;
-            }
-            if (get<string>(table_headers[i]) == condition) {
-                condition_column_index = i;
-            }
-        }
-
-        if (update_value_column_index == -1 || condition_column_index == -1) {
-            error_type = "Error: Column ";
-            if (update_value_column_index == -1) {
-                error_condition = column_to_update;
-            }
-            else {
-                error_condition = condition;
-            } 
-            cout << error_type << error_condition << " not found." << endl;
-            processed_command_outputs.push_back(error_type + error_condition + " not found.");
-            return;
-        }
-
-        bool found = false;
-        for (int i = 2; i < tables.size(); i++) {
-            auto& row = get<vector<variant<int, string>>>(tables[i]);
-            if (holds_alternative<string>(row[condition_column_index])) {
-                if (get<string>(row[condition_column_index]) == condition_value) {
-                    if (holds_alternative<string>(row[update_value_column_index])) {
-                        row[update_value_column_index] = new_value;
-                    }
-                    else if (holds_alternative<int>(row[update_value_column_index])) {
-                        row[update_value_column_index] = stoi(new_value);
-                    }
-                    found = true;
-                }
-            }
-            else if (holds_alternative<int>(row[condition_column_index])) {
-                if (to_string(get<int>(row[condition_column_index])) == condition_value) {
-                    if (holds_alternative<string>(row[update_value_column_index])) {
-                        row[update_value_column_index] = new_value;
-                    }
-                    else if (holds_alternative<int>(row[update_value_column_index])) {
-                        row[update_value_column_index] = stoi(new_value);
-                    }
-                    found = true;
-                }
-            }
-        }
-        if (!found)
-        {
-            error_type = "Error: Condition ";
-            error_condition = condition_value;
-            cout << error_type << error_condition << " not found."  << endl;
-            processed_command_outputs.push_back(error_type + error_condition + " not found.");
-        }
-    } else {
-        cout << "Error: Invalid UPDATE statement." << endl;
-        processed_command_outputs.push_back("Error: Invalid UPDATE statement.");
-    }
-}
-
-void add_table_headers(const vector<string>& table_headers) {
+// Function to add table headers to be used in FileManip.h
+void add_table_headers(const vector<string>& table_headers) 
+{
     vector<variant<int, string>> headers;
     for (const auto& header : table_headers) {
         headers.push_back(header);

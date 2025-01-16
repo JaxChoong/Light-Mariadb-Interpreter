@@ -1,8 +1,14 @@
 > CREATE fileOutput3.txt;
 > DATABASES;
-C:\Users\User\VS Code Stuff\C++\Light-Mariadb-Interpreter\src\fileInput3.mdb
+C:\Users\User\VS Code Stuff\C++\Light-Mariadb-Interpreter\fileInput3.mdb
 
-> CREATE TABLE employee ( employee_id INT, employee_name TEXT, employee_city TEXT, employee_department TEXT, employee_salary INT);
+> CREATE TABLE employee ( 
+employee_id INT, 
+employee_name TEXT, 
+employee_city TEXT, 
+employee_department TEXT, 
+employee_salary INT
+);
 
 > INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES  (1, 'Jax', 'Kuala Lumpur', 'HR', 60000); 
 > INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES  (2, 'Calvin', 'Johor Bahru', 'IT', 75000) ;
@@ -25,7 +31,7 @@ employee
 employee_id, employee_name, employee_city, employee_department, employee_salary
 1,  'Jax',  'Kuala Lumpur',  'HR',  60000
 2,  'Calvin',  'Johor Bahru',  'IT',  75000
-3,  'Kee',  'George Town',  'Finance',  70000
+3,  'Kee',  'George Town',  'Finance', 72000
 4,  'Jason',  'Kota Kinabalu',  'IT',  80000
 
 > DELETE FROM employee WHERE employee_id = 2;
@@ -33,16 +39,17 @@ employee_id, employee_name, employee_city, employee_department, employee_salary
 > SELECT * FROM employee;
 employee_id, employee_name, employee_city, employee_department, employee_salary
 1,  'Jax',  'Kuala Lumpur',  'HR',  60000
-3,  'Kee',  'George Town',  'Finance',  70000
+3,  'Kee',  'George Town',  'Finance', 72000
 4,  'Jason',  'Kota Kinabalu',  'IT',  80000
 
-> SELECT COUNT(*) AS total_employees FROM employee;
+> SELECT COUNT(*) FROM employee;
+Count: 3
 
 > INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary)  VALUES (5, 'Ali', 'Shah Alam', 'HR', 65000);
 
 > SELECT * FROM employee;
 employee_id, employee_name, employee_city, employee_department, employee_salary
 1,  'Jax',  'Kuala Lumpur',  'HR',  60000
-3,  'Kee',  'George Town',  'Finance',  70000
+3,  'Kee',  'George Town',  'Finance', 72000
 4,  'Jason',  'Kota Kinabalu',  'IT',  80000
 5,  'Ali',  'Shah Alam',  'HR',  65000

@@ -1,7 +1,13 @@
 CREATE fileOutput3.txt;
 DATABASES;
 
-CREATE TABLE employee ( employee_id INT, employee_name TEXT, employee_city TEXT, employee_department TEXT, employee_salary INT);
+CREATE TABLE employee ( 
+employee_id INT, 
+employee_name TEXT, 
+employee_city TEXT, 
+employee_department TEXT, 
+employee_salary INT
+);
 
 INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES  (1, 'Jax', 'Kuala Lumpur', 'HR', 60000); 
 INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES  (2, 'Calvin', 'Johor Bahru', 'IT', 75000) ;
@@ -20,7 +26,7 @@ DELETE FROM employee WHERE employee_id = 2;
 
 SELECT * FROM employee;
 
-SELECT COUNT(*) AS total_employees FROM employee;
+SELECT COUNT(*) FROM employee;
 
 INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary)  VALUES (5, 'Ali', 'Shah Alam', 'HR', 65000);
 

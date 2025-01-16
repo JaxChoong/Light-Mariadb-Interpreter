@@ -29,16 +29,3 @@ SELECT COUNT(*) FROM customer;
 
 TABLES;
 
-UPDATE customer SET customer_email='email363' WHERE customer_id=1;  
-SELECT * FROM customer;
-
-UPDATE customer SET customer_name='Jack' WHERE customer_id= 2;
-SELECT * FROM customer;
-
-UPDATE customer SET customer_state='PENDING' WHERE customer_id= 3;
-SELECT * FROM customer;
-
-DELETE FROM customer WHERE customer_id=4;
-SELECT * FROM customer;
-
-SELECT COUNT(*) FROM customer;
