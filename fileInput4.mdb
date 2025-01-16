@@ -12,17 +12,21 @@ employee_salary INT
 INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES (1,'Jax','Kuala Lumpur','HR',60000);
 INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES (2,'Calvin','Johor Bahru','IT',75000);
 INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES (3,'Kee','George Town','Finance',70000);
-INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES (4,'Jason','Kota Kinabalu','IT',80000);
+INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES ();
 
 SELECT * FROM employee;
 
 TABLES;
 
-UPDATE employee SET employee_salary = 72000 WHERE employee_id = 3;
+UPDATE employee SET employee_salary =20000 WHERE employee_id = 2;
+
+UPDATE employee SET employee_age = 24 WHERE employee_id = 2;
 
 SELECT * FROM employee;
 
-DELETE FROM employee WHERE employee_id = 2;
+DELETE FROM employee WHERE employee_age = 3;
+
+DELETE FROM employee WHERE;
 
 SELECT * FROM employee;
 
