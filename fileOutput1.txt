@@ -1,6 +1,6 @@
 > CREATE fileOutput1.txt;
 > DATABASES;
-C:\Users\User\VS Code Stuff\C++\Light-Mariadb-Interpreter\fileInput1.mdb
+C:\Users\USER\Documents\Light-Mariadb-Interpreter\fileInput1.mdb
 
 > CREATE TABLE customer(
 customer_id INT,
