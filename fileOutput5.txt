@@ -1,6 +1,6 @@
 > CREATE fileOutput5.txt;
 > DATABASES;
-C:\Users\USER\Documents\Light-Mariadb-Interpreter\fileInput5.mdb
+C:\Users\User\VS Code Stuff\C++\Light-Mariadb-Interpreter\fileInput5.mdb
 
 > CREATE TABLE player(
 player_id INT,
@@ -86,7 +86,3 @@ player_id, player_name, player_region, player_style, player_rank, player_phone, 
 
 > SELECT COUNT(*) FROM player;
 Count: 4
-
-
-
-

@@ -46,7 +46,3 @@ DELETE FROM player WHERE player_id = 2;
 SELECT * FROM player;
 
 SELECT COUNT(*) FROM player;
-
-
-
-

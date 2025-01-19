@@ -279,25 +279,12 @@ void process_update_data(const string& update_command) {
             if ((holds_alternative<string>(row[condition_index]) && get<string>(row[condition_index]) == condition_value) ||
                 (holds_alternative<int>(row[condition_index]) && to_string(get<int>(row[condition_index])) == condition_value)) {
 
-                // Debug: print matching row
-                cout << "Updating row: ";
-                for (const auto& cell : row) {
-                    if (holds_alternative<int>(cell)) {
-                        cout << get<int>(cell) << " ";
-                    } else {
-                        cout << get<string>(cell) << " ";
-                    }
-                }
-                cout << endl;
-
                 // Apply updates
                 for (const auto& [col_index, new_value] : updates) {
                     if (holds_alternative<string>(row[col_index])) {
                         row[col_index] = new_value;
-                        cout << "Updated column " << get<string>(table_headers[col_index]) << " to " << new_value << endl;
                     } else if (holds_alternative<int>(row[col_index])) {
                         row[col_index] = stoi(new_value);
-                        cout << "Updated column " << get<string>(table_headers[col_index]) << " to " << new_value << endl;
                     }
                 }
                 found = true;
@@ -345,7 +332,7 @@ void process_delete_data (const string& delete_command) {
 
         if (column_index == -1)
         {
-            cout << "Column not found" << endl;
+            cout << "Error: Column " << condition << " not found!" << endl;
             processed_command_outputs.push_back("Column not found");
             return;
         }
