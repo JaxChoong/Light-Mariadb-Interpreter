@@ -1,19 +1,11 @@
 CREATE fileOutput3.txt;
 DATABASES;
 
-<<<<<<< HEAD
-CREATE TABLE employee ( 
-employee_id INT, 
-employee_name TEXT, 
-employee_city TEXT, 
-employee_department TEXT, 
-=======
 CREATE TABLE employee (
 employee_id INT,
 employee_name TEXT,
 employee_city TEXT,
 employee_department TEXT,
->>>>>>> 23eaedd7124d8508741e0e560dcfda14f9aae345
 employee_salary INT
 );
 

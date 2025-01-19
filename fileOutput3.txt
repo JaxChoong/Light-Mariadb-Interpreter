@@ -1,20 +1,12 @@
 > CREATE fileOutput3.txt;
 > DATABASES;
-C:\Users\User\VS Code Stuff\C++\Light-Mariadb-Interpreter\fileInput3.mdb
+C:\Users\USER\Documents\Light-Mariadb-Interpreter\fileInput3.mdb
 
-<<<<<<< HEAD
-> CREATE TABLE employee ( 
-employee_id INT, 
-employee_name TEXT, 
-employee_city TEXT, 
-employee_department TEXT, 
-=======
 > CREATE TABLE employee (
 employee_id INT,
 employee_name TEXT,
 employee_city TEXT,
 employee_department TEXT,
->>>>>>> 23eaedd7124d8508741e0e560dcfda14f9aae345
 employee_salary INT
 );
 
@@ -37,31 +29,18 @@ employee
 
 > SELECT * FROM employee;
 employee_id, employee_name, employee_city, employee_department, employee_salary
-<<<<<<< HEAD
-1,  'Jax',  'Kuala Lumpur',  'HR',  60000
-2,  'Calvin',  'Johor Bahru',  'IT',  75000
-3,  'Kee',  'George Town',  'Finance', 72000
-4,  'Jason',  'Kota Kinabalu',  'IT',  80000
-=======
 1, Jax, Kuala Lumpur, HR, 60000
 2, Calvin, Johor Bahru, IT, 75000
 3, Kee, George Town, Finance, 72000
 4, Jason, Kota Kinabalu, IT, 80000
->>>>>>> 23eaedd7124d8508741e0e560dcfda14f9aae345
 
 > DELETE FROM employee WHERE employee_id = 2;
 
 > SELECT * FROM employee;
 employee_id, employee_name, employee_city, employee_department, employee_salary
-<<<<<<< HEAD
-1,  'Jax',  'Kuala Lumpur',  'HR',  60000
-3,  'Kee',  'George Town',  'Finance', 72000
-4,  'Jason',  'Kota Kinabalu',  'IT',  80000
-=======
 1, Jax, Kuala Lumpur, HR, 60000
 3, Kee, George Town, Finance, 72000
 4, Jason, Kota Kinabalu, IT, 80000
->>>>>>> 23eaedd7124d8508741e0e560dcfda14f9aae345
 
 > SELECT COUNT(*) FROM employee;
 Count: 3
@@ -70,14 +49,7 @@ Count: 3
 
 > SELECT * FROM employee;
 employee_id, employee_name, employee_city, employee_department, employee_salary
-<<<<<<< HEAD
-1,  'Jax',  'Kuala Lumpur',  'HR',  60000
-3,  'Kee',  'George Town',  'Finance', 72000
-4,  'Jason',  'Kota Kinabalu',  'IT',  80000
-5,  'Ali',  'Shah Alam',  'HR',  65000
-=======
 1, Jax, Kuala Lumpur, HR, 60000
 3, Kee, George Town, Finance, 72000
 4, Jason, Kota Kinabalu, IT, 80000
 5, Ali, Shah Alam, HR, 65000
->>>>>>> 23eaedd7124d8508741e0e560dcfda14f9aae345

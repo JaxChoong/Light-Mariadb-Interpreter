@@ -1,0 +1,52 @@
+CREATE fileOutput5.txt;
+DATABASES;
+
+CREATE TABLE player(
+player_id INT,
+player_name TEXT,
+player_region TEXT,
+player_style TEXT,
+player_rank INT,
+player_phone TEXT,
+player_main TEXT
+);
+TABLES;
+
+INSERT INTO player(player_id,player_name,player_region,player_style,player_rank,player_phone,player_main) VALUES (1,'Hikaru','Asia','Epic', 3,'Samsung S25 Ultra','Tank');
+INSERT INTO player(player_id,player_name,player_region,player_style,player_rank,player_phone,player_main) VALUES (2,'Ginga','Europe','Noice', 2 ,'Xiaomi 16 Ultra','Healer');
+INSERT INTO player(player_id,player_name,player_region,player_style,player_rank,player_phone,player_main) VALUES (3,'Zero','Africa','Chill', 6,'ROG phone 8 Ultra','Sub-DPS');
+INSERT INTO player(player_id,player_name,player_region,player_style,player_rank,player_phone,player_main) VALUES (4,'Yurisa','SA','Fearless', 95,'Honor Magic V5','Buffer');
+
+SELECT * FROM player;
+
+UPDATE player SET player_name = 'Faker' WHERE player_id = 1;
+
+SELECT * FROM player;
+
+UPDATE player SET player_name = 'Shawn' WHERE player_id = 2;
+
+SELECT * FROM player;
+
+UPDATE player SET player_name = 'Chrissy' WHERE player_id = 3;
+
+SELECT * FROM player;
+
+UPDATE player SET player_name = 'Miku' WHERE player_id = 4;
+
+SELECT * FROM player;
+
+TABLES;
+
+INSERT INTO player(player_id, player_name, player_region, player_style, player_rank) VALUES (5,Ginga,NA,cool,1,Iphone 16 pro max,DPS);
+
+SELECT * FROM player;
+
+DELETE FROM player WHERE player_id = 2;
+
+SELECT * FROM player;
+
+SELECT COUNT(*) FROM player;
+
+
+
+
