@@ -70,7 +70,13 @@ string process_line(const string& line, string current_database) {
         // checks if the select command is "SELECT *" ( npos means not found)
         if (m[2].str().find(" *") != std::string::npos) {
             // if command is 'SELECT *', print the table
-            print_table( tables );
+            if (tables.empty() || tables.size() < 3) {
+                cout << "Error: Table data is invalid or empty." << endl;
+                processed_command_outputs.push_back("Error: Table data is invalid or empty.");
+            }
+            else{
+                print_table( tables );
+            }
         } else {
             // if command is SELECT COUNT(*), print the count of the table
             int count = tables.size() - 2;     // minus 2 to remove header and column names in [0] and [1]

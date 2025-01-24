@@ -10,6 +10,9 @@ employee_department TEXT,
 employee_salary INT
 );
 
+> SELECT * FROM employee;
+Error: Table data is invalid or empty.
+
 > INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES (1,'Jax','Kuala Lumpur','HR',60000);
 > INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES (2,'Calvin','Johor Bahru','IT',75000);
 > INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES (3,'Kee','George Town','Finance',70000);
@@ -49,7 +52,7 @@ employee_id, employee_name, employee_city, employee_department, employee_salary
 3, Kee, George Town, Finance, 70000
 
 > SELECT COUNT(*) FROM employee;
-Count: 3
+3
 
 > INSERT INTO employee(employee_id, employee_name, employee_city, employee_department, employee_salary) VALUES (5,'Ali','Shah Alam','HR',65000);
 
