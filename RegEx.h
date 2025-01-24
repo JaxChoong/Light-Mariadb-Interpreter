@@ -155,7 +155,7 @@ void process_insert_data(const string& insert_command) {
             // Split the captured string into individual values
             regex value_regex(R"('([^']*)'|([^,]+))");
             // start iterator(it) in the beginning, and while its not at the end, increment iterator
-        auto begin = sregex_iterator(insert_data.begin(), insert_data.end(), value_regex);
+            auto begin = sregex_iterator(insert_data.begin(), insert_data.end(), value_regex);
             auto end = sregex_iterator();
 
             vector<variant<int, string>> table_data;
