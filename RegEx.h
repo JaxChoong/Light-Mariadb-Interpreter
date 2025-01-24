@@ -92,7 +92,7 @@ string process_line(const string& line, string current_database) {
     }
     if (regex_search(line, m, databases_command)) {
 
-        char full_path[FILENAME_MAX];    // saves the full path
+        char full_path[FILENAME_MAX];    // creates char array to store the full path
         _fullpath(full_path, (current_database).c_str(), FILENAME_MAX);   // gets the full path of the current database
                                                                           // _fullpath gets the full path of the current database
                                                                           // first param is the variable to save the path
