@@ -131,7 +131,7 @@ vector<string> get_create_type(const string& create_command) {
     else if (regex_search(create_command, m, output_file_command))
     {
         output_filename = m.str();  // set the output filename to the output file name
-        return {"output_file_name", "lol"};
+        return {"output_file_name", output_filename};
     }
     return {};
 }
