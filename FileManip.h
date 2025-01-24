@@ -67,8 +67,16 @@ void read_file(const string& filename) {
                         // if end of the coloumn def, then set it to false and quit this loop
                         in_create_table_block = false;
 
-                        // Add the table headers to the tables vector
-                        add_table_headers(table_headers);
+                        if (table_headers.empty()) {
+                            cout << "Error: No columns found in CREATE TABLE block." << endl;
+                            processed_command_outputs.push_back("Error: No columns found in CREATE TABLE block.");
+                            break;
+                        } 
+                        else 
+                        {
+                            // Add the table headers to the tables vector
+                            add_table_headers(table_headers);
+                        }
                     }
                 }
             } 
