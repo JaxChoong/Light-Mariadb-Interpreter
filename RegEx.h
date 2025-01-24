@@ -160,25 +160,25 @@ void process_insert_data(const string& insert_command) {
 
             vector<variant<int, string>> table_data;
 
-        // start iterator(it) in the beginning, and while its not at the end, increment iterator
-        for (auto it = begin; it != end; ++it)
-        {
-            // get the value of the cell
-            // if the first group is matched, get the first group, else get the second group
-            // this basically means if the first group matches the regex, get the first group, else get the second group
-            string value = (*it)[1].matched ? (*it)[1].str() : (*it)[2].str();
+            // start iterator(it) in the beginning, and while its not at the end, increment iterator
+            for (auto it = begin; it != end; ++it)
+            {
+                // get the value of the cell
+                // if the first group is matched, get the first group, else get the second group
+                // this basically means if the first group matches the regex, get the first group, else get the second group
+                string value = (*it)[1].matched ? (*it)[1].str() : (*it)[2].str();
 
-            // Check if the value is an integer or a string
-            if (!value.empty() && all_of(value.begin(), value.end(), ::isdigit))
-            {
-                table_data.push_back(stoi(value));
+                // Check if the value is an integer or a string
+                if (!value.empty() && all_of(value.begin(), value.end(), ::isdigit))
+                {
+                    table_data.push_back(stoi(value));
+                }
+                else
+                {
+                    table_data.push_back(value);
+                }
             }
-            else
-            {
-                table_data.push_back(value);
-            }
-        }
-        cout << endl;
+            cout << endl;
 
             // Add data to the table
             tables.push_back(table_data);
