@@ -79,9 +79,15 @@ string process_line(const string& line, string current_database) {
             }
         } else {
             // if command is SELECT COUNT(*), print the count of the table
-            int count = tables.size() - 2;     // minus 2 to remove header and column names in [0] and [1]
-            cout << count << endl;
-            processed_command_outputs.push_back(to_string(count));
+            if ( !tables.empty() && tables.size() > 2 ) {
+                int count = tables.size() - 2;     // minus 2 to remove header and column names in [0] and [1]
+                cout << count << endl;
+                processed_command_outputs.push_back(to_string(count));
+            }
+            else{
+                cout << "Error: Table is empty." << endl;
+                processed_command_outputs.push_back("Error: Table is empty.");
+            }
         }
     }
 
