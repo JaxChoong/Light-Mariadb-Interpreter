@@ -75,7 +75,7 @@ string process_line(const string& line, string current_database) {
             // if command is SELECT COUNT(*), print the count of the table
             int count = tables.size() - 2;     // minus 2 to remove header and column names in [0] and [1]
             cout << count << endl;
-            processed_command_outputs.push_back("Count: " + to_string(count));
+            processed_command_outputs.push_back(to_string(count));
         }
     }
 
