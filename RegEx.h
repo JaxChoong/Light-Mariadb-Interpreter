@@ -190,7 +190,6 @@ void process_insert_data(const string& insert_command) {
                     table_data.push_back(value);
                 }
             }
-            cout << endl;
 
             // Add data to the table
             tables.push_back(table_data);
@@ -405,8 +404,8 @@ void print_table(const vector<variant<string, vector<variant<int, string>>>>& ta
 
             if (&cell != &row.back())
             {   // compare the address of the cell with the address of the last cell in the row
-                cout << ", "; // Print separator if cell is not the last one
-                line += ", ";
+                cout << ","; // Print separator if cell is not the last one
+                line += ",";
             }
         }
 

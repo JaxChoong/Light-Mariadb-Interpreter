@@ -1,7 +1,6 @@
 > CREATE fileOutput5.txt;
 > DATABASES;
 C:\Users\User\VS Code Stuff\C++\Light-Mariadb-Interpreter\fileInput5.mdb
-
 > CREATE TABLE player(
 player_id INT,
 player_name TEXT,
@@ -13,76 +12,60 @@ player_main TEXT
 );
 > TABLES;
 player
-
 > INSERT INTO player(player_id,player_name,player_region,player_style,player_rank,player_phone,player_main) VALUES (1,'Hikaru','Asia','Epic', 3,'Samsung S25 Ultra','Tank');
 > INSERT INTO player(player_id,player_name,player_region,player_style,player_rank,player_phone,player_main) VALUES (2,'Ginga','Europe','Noice', 2 ,'Xiaomi 16 Ultra','Healer');
 > INSERT INTO player(player_id,player_name,player_region,player_style,player_rank,player_phone,player_main) VALUES (3,'Zero','Africa','Chill', 6,'ROG phone 8 Ultra','Sub-DPS');
 > INSERT INTO player(player_id,player_name,player_region,player_style,player_rank,player_phone,player_main) VALUES (4,'Yurisa','SA','Fearless', 95,'Honor Magic V5','Buffer');
-
 > SELECT * FROM player;
-player_id, player_name, player_region, player_style, player_rank, player_phone, player_main
-1, Hikaru, Asia, Epic,  3, Samsung S25 Ultra, Tank
-2, Ginga, Europe, Noice,  2 , Xiaomi 16 Ultra, Healer
-3, Zero, Africa, Chill,  6, ROG phone 8 Ultra, Sub-DPS
-4, Yurisa, SA, Fearless,  95, Honor Magic V5, Buffer
-
+player_id,player_name,player_region,player_style,player_rank,player_phone,player_main
+1,Hikaru,Asia,Epic, 3,Samsung S25 Ultra,Tank
+2,Ginga,Europe,Noice, 2 ,Xiaomi 16 Ultra,Healer
+3,Zero,Africa,Chill, 6,ROG phone 8 Ultra,Sub-DPS
+4,Yurisa,SA,Fearless, 95,Honor Magic V5,Buffer
 > UPDATE player SET player_name = 'Faker' WHERE player_id = 1;
-
 > SELECT * FROM player;
-player_id, player_name, player_region, player_style, player_rank, player_phone, player_main
-1, Faker, Asia, Epic,  3, Samsung S25 Ultra, Tank
-2, Ginga, Europe, Noice,  2 , Xiaomi 16 Ultra, Healer
-3, Zero, Africa, Chill,  6, ROG phone 8 Ultra, Sub-DPS
-4, Yurisa, SA, Fearless,  95, Honor Magic V5, Buffer
-
+player_id,player_name,player_region,player_style,player_rank,player_phone,player_main
+1,Faker,Asia,Epic, 3,Samsung S25 Ultra,Tank
+2,Ginga,Europe,Noice, 2 ,Xiaomi 16 Ultra,Healer
+3,Zero,Africa,Chill, 6,ROG phone 8 Ultra,Sub-DPS
+4,Yurisa,SA,Fearless, 95,Honor Magic V5,Buffer
 > UPDATE player SET player_name = 'Shawn' WHERE player_id = 2;
-
 > SELECT * FROM player;
-player_id, player_name, player_region, player_style, player_rank, player_phone, player_main
-1, Faker, Asia, Epic,  3, Samsung S25 Ultra, Tank
-2, Shawn, Europe, Noice,  2 , Xiaomi 16 Ultra, Healer
-3, Zero, Africa, Chill,  6, ROG phone 8 Ultra, Sub-DPS
-4, Yurisa, SA, Fearless,  95, Honor Magic V5, Buffer
-
+player_id,player_name,player_region,player_style,player_rank,player_phone,player_main
+1,Faker,Asia,Epic, 3,Samsung S25 Ultra,Tank
+2,Shawn,Europe,Noice, 2 ,Xiaomi 16 Ultra,Healer
+3,Zero,Africa,Chill, 6,ROG phone 8 Ultra,Sub-DPS
+4,Yurisa,SA,Fearless, 95,Honor Magic V5,Buffer
 > UPDATE player SET player_name = 'Chrissy' WHERE player_id = 3;
-
 > SELECT * FROM player;
-player_id, player_name, player_region, player_style, player_rank, player_phone, player_main
-1, Faker, Asia, Epic,  3, Samsung S25 Ultra, Tank
-2, Shawn, Europe, Noice,  2 , Xiaomi 16 Ultra, Healer
-3, Chrissy, Africa, Chill,  6, ROG phone 8 Ultra, Sub-DPS
-4, Yurisa, SA, Fearless,  95, Honor Magic V5, Buffer
-
+player_id,player_name,player_region,player_style,player_rank,player_phone,player_main
+1,Faker,Asia,Epic, 3,Samsung S25 Ultra,Tank
+2,Shawn,Europe,Noice, 2 ,Xiaomi 16 Ultra,Healer
+3,Chrissy,Africa,Chill, 6,ROG phone 8 Ultra,Sub-DPS
+4,Yurisa,SA,Fearless, 95,Honor Magic V5,Buffer
 > UPDATE player SET player_name = 'Miku' WHERE player_id = 4;
-
 > SELECT * FROM player;
-player_id, player_name, player_region, player_style, player_rank, player_phone, player_main
-1, Faker, Asia, Epic,  3, Samsung S25 Ultra, Tank
-2, Shawn, Europe, Noice,  2 , Xiaomi 16 Ultra, Healer
-3, Chrissy, Africa, Chill,  6, ROG phone 8 Ultra, Sub-DPS
-4, Miku, SA, Fearless,  95, Honor Magic V5, Buffer
-
+player_id,player_name,player_region,player_style,player_rank,player_phone,player_main
+1,Faker,Asia,Epic, 3,Samsung S25 Ultra,Tank
+2,Shawn,Europe,Noice, 2 ,Xiaomi 16 Ultra,Healer
+3,Chrissy,Africa,Chill, 6,ROG phone 8 Ultra,Sub-DPS
+4,Miku,SA,Fearless, 95,Honor Magic V5,Buffer
 > TABLES;
 player
-
 > INSERT INTO player(player_id, player_name, player_region, player_style, player_rank) VALUES (5,Ginga,NA,cool,1,Iphone 16 pro max,DPS);
-
 > SELECT * FROM player;
-player_id, player_name, player_region, player_style, player_rank, player_phone, player_main
-1, Faker, Asia, Epic,  3, Samsung S25 Ultra, Tank
-2, Shawn, Europe, Noice,  2 , Xiaomi 16 Ultra, Healer
-3, Chrissy, Africa, Chill,  6, ROG phone 8 Ultra, Sub-DPS
-4, Miku, SA, Fearless,  95, Honor Magic V5, Buffer
-5, Ginga, NA, cool, 1, Iphone 16 pro max, DPS
-
+player_id,player_name,player_region,player_style,player_rank,player_phone,player_main
+1,Faker,Asia,Epic, 3,Samsung S25 Ultra,Tank
+2,Shawn,Europe,Noice, 2 ,Xiaomi 16 Ultra,Healer
+3,Chrissy,Africa,Chill, 6,ROG phone 8 Ultra,Sub-DPS
+4,Miku,SA,Fearless, 95,Honor Magic V5,Buffer
+5,Ginga,NA,cool,1,Iphone 16 pro max,DPS
 > DELETE FROM player WHERE player_id = 2;
-
 > SELECT * FROM player;
-player_id, player_name, player_region, player_style, player_rank, player_phone, player_main
-1, Faker, Asia, Epic,  3, Samsung S25 Ultra, Tank
-3, Chrissy, Africa, Chill,  6, ROG phone 8 Ultra, Sub-DPS
-4, Miku, SA, Fearless,  95, Honor Magic V5, Buffer
-5, Ginga, NA, cool, 1, Iphone 16 pro max, DPS
-
+player_id,player_name,player_region,player_style,player_rank,player_phone,player_main
+1,Faker,Asia,Epic, 3,Samsung S25 Ultra,Tank
+3,Chrissy,Africa,Chill, 6,ROG phone 8 Ultra,Sub-DPS
+4,Miku,SA,Fearless, 95,Honor Magic V5,Buffer
+5,Ginga,NA,cool,1,Iphone 16 pro max,DPS
 > SELECT COUNT(*) FROM player;
-Count: 4
+4

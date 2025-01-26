@@ -80,10 +80,6 @@ void read_file(const string& filename) {
                     }
                 }
             } 
-            else {
-                processed_command_outputs.push_back(line);
-                cout << line << endl;
-            }
         }
         file.close();
 
