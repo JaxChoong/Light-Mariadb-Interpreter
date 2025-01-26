@@ -284,7 +284,7 @@ void process_update_data(const string& update_command) {
 
         // Apply updates to rows matching the condition
         bool found = false;
-        for (size_t i = 2; i < tables.size(); ++i) {
+        for (int i = 2; i < tables.size(); ++i) {
             auto& row = get<vector<variant<int, string>>>(tables[i]);
 
             // Match the condition
@@ -333,7 +333,7 @@ void process_delete_data (const string& delete_command) {
         // Find the index of the column to delete from
         int column_index = -1;
 
-        for (size_t i = 0; i < headers.size(); i++)
+        for (int i = 0; i < headers.size(); i++)
         {
             if (get<string>(headers[i]) == condition)
             {
@@ -349,8 +349,8 @@ void process_delete_data (const string& delete_command) {
             return;
         }
 
-        size_t initial_size = tables.size();
-        for (size_t i = tables.size() - 1; i > 0; --i)
+        int initial_size = tables.size();
+        for (int i = tables.size() - 1; i > 0; --i)
         { // Start from the last row and move up
             const auto& row = get<vector<variant<int, string>>>(tables[i]);
             // if the row is a string, and the value is the same as the value to delete
@@ -384,7 +384,7 @@ void process_delete_data (const string& delete_command) {
 void print_table(const vector<variant<string, vector<variant<int, string>>>>& table)
 {
     vector<string> lines;    // saves the table's lines
-    for (size_t i = 1; i < table.size(); i++)
+    for (int i = 1; i < table.size(); i++)
     {
 
         // Get the row as a vector of integers or strings
