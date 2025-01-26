@@ -349,7 +349,6 @@ void process_delete_data (const string& delete_command) {
             return;
         }
 
-        int initial_size = tables.size();
         for (int i = tables.size() - 1; i > 0; --i)
         { // Start from the last row and move up
             const auto& row = get<vector<variant<int, string>>>(tables[i]);
